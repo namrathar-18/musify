@@ -1,0 +1,232 @@
+{
+  "info": {
+    "name": "Spotify Clone API",
+    "description": "Full collection of all endpoints. Set the `baseUrl` and `clerkJwt` collection variables before running protected requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "clerkJwt", "value": "PASTE_YOUR_CLERK_JWT_HERE" },
+    { "key": "trackId", "value": "3n3Ppam7vgaVa1iaRUc9Lp", "description": "Example Spotify track id (Mr. Brightside)" },
+    { "key": "playlistId", "value": "PASTE_PLAYLIST_ID_AFTER_CREATE" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{clerkJwt}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] },
+            "auth": { "type": "noauth" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Songs",
+      "item": [
+        {
+          "name": "GET /songs (paginated)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/songs?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["songs"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            },
+            "auth": { "type": "noauth" }
+          }
+        },
+        {
+          "name": "GET /songs/:id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/songs/{{trackId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["songs", "{{trackId}}"]
+            },
+            "auth": { "type": "noauth" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "GET /search?q=daft punk",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/search?q=daft punk",
+              "host": ["{{baseUrl}}"],
+              "path": ["search"],
+              "query": [{ "key": "q", "value": "daft punk" }]
+            },
+            "auth": { "type": "noauth" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Playlists",
+      "item": [
+        {
+          "name": "GET /playlists",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/playlists", "host": ["{{baseUrl}}"], "path": ["playlists"] }
+          }
+        },
+        {
+          "name": "POST /playlists (create)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Road Trip 2026\",\n  \"description\": \"Top driving songs\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/playlists", "host": ["{{baseUrl}}"], "path": ["playlists"] }
+          }
+        },
+        {
+          "name": "GET /playlists/:id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/playlists/{{playlistId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["playlists", "{{playlistId}}"]
+            }
+          }
+        },
+        {
+          "name": "PUT /playlists/:id (rename)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Road Trip — Updated\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/playlists/{{playlistId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["playlists", "{{playlistId}}"]
+            }
+          }
+        },
+        {
+          "name": "DELETE /playlists/:id",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/playlists/{{playlistId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["playlists", "{{playlistId}}"]
+            }
+          }
+        },
+        {
+          "name": "POST /playlists/:id/tracks (add)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spotifyTrackId\": \"{{trackId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/playlists/{{playlistId}}/tracks",
+              "host": ["{{baseUrl}}"],
+              "path": ["playlists", "{{playlistId}}", "tracks"]
+            }
+          }
+        },
+        {
+          "name": "DELETE /playlists/:id/tracks/:trackId (remove)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/playlists/{{playlistId}}/tracks/{{trackId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["playlists", "{{playlistId}}", "tracks", "{{trackId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "GET /users/me",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "me"]
+            }
+          }
+        },
+        {
+          "name": "GET /users/me/liked",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/me/liked",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "me", "liked"]
+            }
+          }
+        },
+        {
+          "name": "POST /users/me/liked/:trackId (toggle)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/users/me/liked/{{trackId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "me", "liked", "{{trackId}}"]
+            }
+          }
+        },
+        {
+          "name": "GET /users/me/recent",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/me/recent",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "me", "recent"]
+            }
+          }
+        },
+        {
+          "name": "POST /users/me/recent/:trackId (record play)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/users/me/recent/{{trackId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "me", "recent", "{{trackId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
