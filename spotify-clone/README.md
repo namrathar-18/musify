@@ -1,6 +1,17 @@
-# Spotify Clone (MERN + Clerk + Spotify Web API)
+# 🎵 Musify — Spotify Clone (MERN + Clerk + Spotify Web API)
 
 A full-stack music streaming clone built with React, Express, MongoDB, Clerk auth, and the Spotify Web API. Browse a catalog of 500+ tracks cached from Spotify, create playlists, like songs, and stream 30-second previews — all with a Spotify-style UI.
+
+<p align="center">
+  <a href="#-cloud-deployment-vercel--render--atlas"><b>🚀 Deploy Guide</b></a> &nbsp;•&nbsp;
+  <a href="#-environment-variables"><b>Env Vars</b></a> &nbsp;•&nbsp;
+  <a href="#api-endpoints"><b>API</b></a> &nbsp;•&nbsp;
+  <a href="#architecture"><b>Architecture</b></a>
+</p>
+
+> **Live Demo:** deploy in ~10 minutes with the [step-by-step guide below](#-cloud-deployment-vercel--render--atlas) (Vercel + Render + MongoDB Atlas). Add your URL here once live: `https://musify.vercel.app`
+
+**Author:** Namratha R — [@namrathar-18](https://github.com/namrathar-18)
 
 ---
 
@@ -256,6 +267,61 @@ If yours comes back as 0, the catalog will still render and all CRUD/auth featur
 
 ---
 
+## 🔑 Environment Variables
+
+### Backend (`server/.env`)
+
+| Variable | Required | Where to get it |
+|----------|:--------:|-----------------|
+| `MONGODB_URI` | ✅ | MongoDB Atlas → Connect → Drivers |
+| `CLERK_PUBLISHABLE_KEY` | ✅ | [clerk.com](https://clerk.com) → app → API Keys (`pk_...`) |
+| `CLERK_SECRET_KEY` | ✅ | Clerk → API Keys (`sk_...`) |
+| `SPOTIFY_CLIENT_ID` | ✅¹ | [developer.spotify.com](https://developer.spotify.com/dashboard) → app |
+| `SPOTIFY_CLIENT_SECRET` | ✅¹ | Spotify dashboard → app settings |
+| `CLIENT_ORIGIN` | ✅ | Deployed frontend URL (for CORS) |
+| `PORT` / `NODE_ENV` | ⬜ | Set automatically by Render |
+
+¹ Spotify keys are only needed to **seed** the catalog (`npm run seed`). After the 500+ tracks are in MongoDB, the running app serves them from the database.
+
+### Frontend (`client/.env`)
+
+| Variable | Required | Description |
+|----------|:--------:|-------------|
+| `VITE_CLERK_PUBLISHABLE_KEY` | ✅ | Same Clerk publishable key (`pk_...`) |
+| `VITE_API_BASE_URL` | ✅ | Backend base URL, e.g. `https://<your-api>.onrender.com/api` |
+
+> 🔒 `.env` files are gitignored — use the `.env.example` templates and never commit real keys.
+
+---
+
+## 🚀 Cloud Deployment (Vercel + Render + Atlas)
+
+### 1. Database — MongoDB Atlas
+Create a free **M0** cluster, add a DB user, allow network access from `0.0.0.0/0`, and copy the connection string → `MONGODB_URI`.
+
+### 2. Free API keys
+- **Clerk:** [clerk.com](https://clerk.com) → create application → copy publishable + secret keys.
+- **Spotify:** [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) → create app → copy Client ID + Secret.
+
+### 3. Seed the catalog (one-time, locally)
+```bash
+cd spotify-clone/server
+cp .env.example .env    # fill MONGODB_URI + SPOTIFY_* keys
+npm install && npm run seed   # loads 600 tracks into Atlas
+```
+
+### 4. Backend — Render
+This repo includes [`render.yaml`](../render.yaml). On [render.com](https://render.com) → **New → Blueprint** → connect the repo, then set the env vars from the backend table. Or create a **Web Service** manually with **root** `spotify-clone/server`, build `npm install`, start `npm start`.
+
+### 5. Frontend — Vercel
+[vercel.com](https://vercel.com) → **Add New → Project** → import repo → set **root directory** to `spotify-clone/client` (framework **Vite**). Add `VITE_CLERK_PUBLISHABLE_KEY` and `VITE_API_BASE_URL = https://<your-render-url>/api`. Deploy.
+
+### 6. Connect them
+Set the backend's `CLIENT_ORIGIN` to your Vercel URL, and in Clerk → **Domains**, add the Vercel URL. Redeploy the backend.
+
+---
+
 ## License
 
 MIT
+

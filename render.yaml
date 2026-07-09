@@ -1,0 +1,27 @@
+services:
+  # ── Backend (Express API) ────────────────────────────────────────────────
+  - type: web
+    name: musify-backend
+    runtime: node
+    rootDir: spotify-clone/server
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      # Set these in the Render dashboard after creating the service:
+      - key: MONGODB_URI
+        sync: false
+      - key: CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: SPOTIFY_CLIENT_ID
+        sync: false
+      - key: SPOTIFY_CLIENT_SECRET
+        sync: false
+      - key: CLIENT_ORIGIN
+        sync: false   # e.g. https://musify.vercel.app
