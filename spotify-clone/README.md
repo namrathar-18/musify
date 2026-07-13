@@ -3,13 +3,13 @@
 A full-stack music streaming clone built with React, Express, MongoDB, Clerk auth, and the Spotify Web API. Browse a catalog of 500+ tracks cached from Spotify, create playlists, like songs, and stream 30-second previews — all with a Spotify-style UI.
 
 <p align="center">
-  <a href="#-cloud-deployment-vercel--render--atlas"><b>🚀 Deploy Guide</b></a> &nbsp;•&nbsp;
+  <a href="#-cloud-deployment--one-vercel-project-client--api"><b>🚀 Deploy Guide</b></a> &nbsp;•&nbsp;
   <a href="#-environment-variables"><b>Env Vars</b></a> &nbsp;•&nbsp;
   <a href="#api-endpoints"><b>API</b></a> &nbsp;•&nbsp;
   <a href="#architecture"><b>Architecture</b></a>
 </p>
 
-> **Live Demo:** deploy in ~10 minutes with the [step-by-step guide below](#-cloud-deployment-vercel--render--atlas) (Vercel + Render + MongoDB Atlas). Add your URL here once live: `https://musify.vercel.app`
+> **Live Demo:** deploy in ~10 minutes with the [step-by-step guide below](#-cloud-deployment--one-vercel-project-client--api) — one Vercel project (client + serverless API) + MongoDB Atlas. Add your URL here once live: `https://musify.vercel.app`
 
 **Author:** Namratha R — [@namrathar-18](https://github.com/namrathar-18)
 
@@ -294,7 +294,11 @@ If yours comes back as 0, the catalog will still render and all CRUD/auth featur
 
 ---
 
-## 🚀 Cloud Deployment (Vercel + Render + Atlas)
+## 🚀 Cloud Deployment — one Vercel project (client + API)
+
+The whole app deploys to **Vercel as a single project**: the Vite client is served as static files and the Express API runs as a serverless function under `/api`. No separate backend host, no cold-start sleep.
+
+> How it works: [`api/index.js`](api/index.js) exports the Express app as a serverless handler, and [`vercel.json`](vercel.json) builds the client to `client/dist`, serves `/api/*` through the function, and falls back to the SPA for every other route.
 
 ### 1. Database — MongoDB Atlas
 Create a free **M0** cluster, add a DB user, allow network access from `0.0.0.0/0`, and copy the connection string → `MONGODB_URI`.
@@ -306,18 +310,43 @@ Create a free **M0** cluster, add a DB user, allow network access from `0.0.0.0/
 ### 3. Seed the catalog (one-time, locally)
 ```bash
 cd spotify-clone/server
-cp .env.example .env    # fill MONGODB_URI + SPOTIFY_* keys
+cp .env.example .env    # fill MONGODB_URI + SPOTIFY_* keys (point MONGODB_URI at Atlas)
 npm install && npm run seed   # loads 600 tracks into Atlas
 ```
+The running app serves the catalog from MongoDB, so Spotify keys are only needed for this one-time seed.
 
-### 4. Backend — Render
-This repo includes [`render.yaml`](../render.yaml). On [render.com](https://render.com) → **New → Blueprint** → connect the repo, then set the env vars from the backend table. Or create a **Web Service** manually with **root** `spotify-clone/server`, build `npm install`, start `npm start`.
+### 4. Deploy to Vercel
+[vercel.com](https://vercel.com) → **Add New → Project** → import this repo, then:
 
-### 5. Frontend — Vercel
-[vercel.com](https://vercel.com) → **Add New → Project** → import repo → set **root directory** to `spotify-clone/client` (framework **Vite**). Add `VITE_CLERK_PUBLISHABLE_KEY` and `VITE_API_BASE_URL = https://<your-render-url>/api`. Deploy.
+- **Root Directory:** `spotify-clone`  *(not `client` — the root holds `vercel.json` + the `api/` function)*
+- **Framework Preset:** Other *(the included `vercel.json` drives the build)*
+- **Environment Variables:**
 
-### 6. Connect them
-Set the backend's `CLIENT_ORIGIN` to your Vercel URL, and in Clerk → **Domains**, add the Vercel URL. Redeploy the backend.
+  | Key | Value |
+  |-----|-------|
+  | `MONGODB_URI` | your Atlas connection string |
+  | `CLERK_PUBLISHABLE_KEY` | `pk_live_...` (or `pk_test_...`) |
+  | `CLERK_SECRET_KEY` | `sk_live_...` (or `sk_test_...`) |
+  | `VITE_CLERK_PUBLISHABLE_KEY` | same publishable key as above |
+  | `VITE_API_BASE_URL` | `/api` |
+  | `CLIENT_ORIGIN` | your Vercel URL, e.g. `https://musify.vercel.app` |
+
+  Spotify keys are **not** required in Vercel (seeding already happened in step 3).
+
+Click **Deploy**. When it's live, open the URL, then in **Clerk → Domains** add your Vercel URL so sign-in works in production.
+
+### 5. Verify
+```bash
+curl -i https://<your-app>.vercel.app/api/health      # → 200 {"status":"ok",...}
+curl    https://<your-app>.vercel.app/api/songs?limit=5   # → 5 seeded tracks
+```
+Then sign in on the site and confirm liking a song, creating a playlist, and search all work.
+
+<details>
+<summary>Alternative: split hosting (Vercel client + Render API)</summary>
+
+This repo also includes [`render.yaml`](../render.yaml) if you prefer a dedicated backend. Deploy the API on [render.com](https://render.com) (**New → Blueprint**, or a Web Service with root `spotify-clone/server`, build `npm install`, start `npm start`), deploy `spotify-clone/client` as a separate Vercel project with `VITE_API_BASE_URL = https://<your-render-url>/api`, and set the API's `CLIENT_ORIGIN` to the Vercel URL. Note: Render's free tier sleeps after 15 min (~50s cold start).
+</details>
 
 ---
 

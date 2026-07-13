@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment files (never commit secrets)
+.env
+.env.*
+!.env.example
+
+# Editor / tooling / AI assistant local files
+.claude/
+.cursor/
+.idea/
+.vscode/
+*.log
+.DS_Store

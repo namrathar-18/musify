@@ -24,14 +24,17 @@ A production-style **Spotify clone** built on the MERN stack with **Clerk** auth
 | Database | MongoDB (Atlas) + Mongoose |
 | Auth | Clerk (`@clerk/clerk-react` + `@clerk/express`) |
 | External API | Spotify Web API (client-credentials flow) |
-| Hosting | Vercel (client) · Render (API) · MongoDB Atlas (DB) |
+| Hosting | **Vercel** — client + Express API (serverless) in one project · MongoDB Atlas (DB) |
 
 ## 📂 Repository Layout
 
 ```
 musify/
-├── render.yaml            # One-click Render blueprint for the API
+├── render.yaml            # Optional: Render blueprint (alternative API host)
 └── spotify-clone/
+    ├── api/               # Vercel serverless entry (wraps the Express app)
+    ├── vercel.json        # Single-project deploy: static client + /api function
+    ├── package.json       # API (serverless) dependencies
     ├── client/            # React + Vite frontend
     ├── server/            # Express API + Spotify seed script
     └── README.md          # 📖 Full docs: setup, API, architecture, performance
@@ -43,7 +46,7 @@ The application lives in [`spotify-clone/`](./spotify-clone). See the **[full do
 
 - Complete local setup (server + client + seeding 600 tracks)
 - Every environment variable and where to obtain each key (Clerk, Spotify, Atlas)
-- Step-by-step **Vercel + Render + Atlas** deployment guide
+- Step-by-step **one-project Vercel deploy** (client + serverless API) + Atlas
 - All API endpoints, architecture diagram, and performance methodology
 
 ```bash
