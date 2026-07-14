@@ -9,7 +9,7 @@ A full-stack music streaming clone built with React, Express, MongoDB, and Clerk
   <a href="#architecture"><b>Architecture</b></a>
 </p>
 
-> **Live Demo:** deploy in ~10 minutes with the [step-by-step guide below](#-cloud-deployment--one-vercel-project-client--api) — one Vercel project (client + serverless API) + MongoDB Atlas. Add your URL here once live: `https://musify.vercel.app`
+> **🔴 Live Demo:** **https://musify-sigma-blond.vercel.app** &nbsp;·&nbsp; one Vercel project (client + serverless API) + MongoDB Atlas — [deploy guide below](#-cloud-deployment--one-vercel-project-client--api).
 
 **Author:** Namratha R — [@namrathar-18](https://github.com/namrathar-18)
 

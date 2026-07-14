@@ -55,7 +55,7 @@ cd spotify-clone/server && cp .env.example .env && npm install && npm run seed &
 cd spotify-clone/client && cp .env.example .env && npm install && npm run dev
 ```
 
-> **Live Demo:** deploy in ~10 minutes with the guide above, then drop your URL here: `https://musify.vercel.app`
+> **🔴 Live Demo:** **https://musify-sigma-blond.vercel.app**
 
 ## 📜 License
 
