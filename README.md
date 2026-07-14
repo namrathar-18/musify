@@ -59,4 +59,4 @@ cd spotify-clone/client && cp .env.example .env && npm install && npm run dev
 
 ## 📜 License
 
-Namratha R
+Copyright © 2026 **Namratha R**. All Rights Reserved. See [LICENSE](./LICENSE).

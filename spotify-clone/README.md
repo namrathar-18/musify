@@ -344,5 +344,5 @@ This repo also includes [`render.yaml`](../render.yaml) if you prefer a dedicate
 
 ## License
 
-MIT
+Copyright © 2026 **Namratha R**. All Rights Reserved. See [LICENSE](../LICENSE).
 
