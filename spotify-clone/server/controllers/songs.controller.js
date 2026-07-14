@@ -1,5 +1,5 @@
 import Track from '../models/Track.js';
-import { getTrack, normalizeTrack } from '../lib/spotify.js';
+import { getTrackById } from '../lib/itunes.js';
 import { asyncHandler } from '../middleware/error.middleware.js';
 
 // GET /api/songs?page=1&limit=20
@@ -34,9 +34,8 @@ export const getSong = asyncHandler(async (req, res) => {
   let track = await Track.findOne({ spotifyId: id }, { __v: 0 }).lean();
   if (track) return res.json(track);
 
-  // Cache miss: fetch from Spotify, normalize, upsert
-  const raw = await getTrack(id);
-  const normalized = normalizeTrack(raw);
+  // Cache miss: fetch from the catalog API, normalize, upsert
+  const normalized = await getTrackById(id);
   track = await Track.findOneAndUpdate(
     { spotifyId: normalized.spotifyId },
     { $set: normalized },

@@ -2,7 +2,7 @@ import Playlist from '../models/Playlist.js';
 import Track from '../models/Track.js';
 import { getUserId } from '../middleware/auth.middleware.js';
 import { asyncHandler } from '../middleware/error.middleware.js';
-import { getSeveralTracks, normalizeTrack } from '../lib/spotify.js';
+import { getTracksByIds } from '../lib/itunes.js';
 
 // GET /api/playlists
 export const listPlaylists = asyncHandler(async (req, res) => {
@@ -30,11 +30,9 @@ export const getPlaylist = asyncHandler(async (req, res) => {
 
   const missing = trackIds.filter((id) => !cachedMap.has(id));
   if (missing.length) {
-    // Spotify allows up to 50 ids per call
     for (let i = 0; i < missing.length; i += 50) {
       const chunk = missing.slice(i, i + 50);
-      const { tracks } = await getSeveralTracks(chunk);
-      const normalized = (tracks || []).filter(Boolean).map(normalizeTrack);
+      const normalized = await getTracksByIds(chunk);
       if (normalized.length) {
         await Track.bulkWrite(
           normalized.map((t) => ({

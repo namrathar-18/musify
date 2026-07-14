@@ -2,7 +2,7 @@ import User from '../models/User.js';
 import Track from '../models/Track.js';
 import { getUserId } from '../middleware/auth.middleware.js';
 import { asyncHandler } from '../middleware/error.middleware.js';
-import { getSeveralTracks, normalizeTrack } from '../lib/spotify.js';
+import { getTracksByIds } from '../lib/itunes.js';
 import { clerkClient } from '@clerk/express';
 
 // Lazy upsert of the local user record matching the Clerk user
@@ -48,8 +48,7 @@ const hydrateTracks = async (trackIds) => {
   if (missing.length) {
     for (let i = 0; i < missing.length; i += 50) {
       const chunk = missing.slice(i, i + 50);
-      const { tracks } = await getSeveralTracks(chunk);
-      const normalized = (tracks || []).filter(Boolean).map(normalizeTrack);
+      const normalized = await getTracksByIds(chunk);
       if (normalized.length) {
         await Track.bulkWrite(
           normalized.map((t) => ({

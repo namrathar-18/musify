@@ -1,6 +1,6 @@
-# 🎵 Musify — Spotify Clone (MERN + Clerk + Spotify Web API)
+# 🎵 Musify — Spotify Clone (MERN + Clerk + iTunes Search API)
 
-A full-stack music streaming clone built with React, Express, MongoDB, Clerk auth, and the Spotify Web API. Browse a catalog of 500+ tracks cached from Spotify, create playlists, like songs, and stream 30-second previews — all with a Spotify-style UI.
+A full-stack music streaming clone built with React, Express, MongoDB, and Clerk auth. Browse a catalog of 500+ tracks sourced from Apple's free iTunes Search API and cached in MongoDB, create playlists, like songs, and stream real 30-second previews — all with a Spotify-style UI.
 
 <p align="center">
   <a href="#-cloud-deployment--one-vercel-project-client--api"><b>🚀 Deploy Guide</b></a> &nbsp;•&nbsp;
@@ -23,7 +23,7 @@ A full-stack music streaming clone built with React, Express, MongoDB, Clerk aut
 | Backend | Node.js + Express |
 | Database | MongoDB via Mongoose |
 | Auth | Clerk (`@clerk/clerk-react` + `@clerk/express`) |
-| External API | Spotify Web API (client-credentials flow) |
+| External API | iTunes Search API (free, no auth, real 30s previews) |
 
 ---
 
@@ -49,9 +49,9 @@ spotify-clone/
     ├── controllers/                # Business logic
     ├── models/                     # User, Playlist, Track Mongoose schemas
     ├── middleware/                 # auth (Clerk), responseTime, error
-    ├── lib/spotify.js              # Spotify Web API client with token caching
+    ├── lib/itunes.js               # iTunes Search API client (search, seed, hydrate)
     ├── config/db.js                # Mongo connection
-    ├── scripts/seed.js             # Seeds 600 tracks from Spotify into Mongo
+    ├── scripts/seed.js             # Seeds 600+ tracks from iTunes into Mongo
     ├── .env.example
     ├── package.json
     └── server.js                   # Entry
@@ -63,8 +63,8 @@ spotify-clone/
 
 ```
 ┌──────────────────┐         ┌──────────────────┐         ┌──────────────────┐
-│   React Client   │  HTTPS  │   Express API    │  HTTPS  │  Spotify Web API │
-│  (Vite + Clerk)  │ ───────▶│  (Clerk verify)  │ ───────▶│  (client creds)  │
+│   React Client   │  HTTPS  │   Express API    │  HTTPS  │ iTunes Search API│
+│  (Vite + Clerk)  │ ───────▶│  (Clerk verify)  │ ───────▶│  (free, no auth) │
 │                  │         │                  │         └──────────────────┘
 │  - Zustand store │         │  - 4 route files │
 │  - Lazy pages    │         │  - 4 controllers │         ┌──────────────────┐
@@ -87,7 +87,7 @@ Collections:
 1. React calls `fetchLiked()` → axios interceptor pulls a JWT from Clerk's `getToken()` and adds `Authorization: Bearer <jwt>`.
 2. Express runs `responseTime` middleware (starts a high-resolution timer), then `clerkMiddleware()` which verifies the JWT and populates `req.auth.userId`.
 3. The `users` router runs `requireAuth()`, which 401s if the token is missing or invalid.
-4. The controller upserts a local `users` row keyed by `clerkUserId`, hydrates the user's `likedSongs` from the local `tracks` cache (falling back to a Spotify `/tracks` call for any cache misses), and returns JSON.
+4. The controller upserts a local `users` row keyed by `clerkUserId`, hydrates the user's `likedSongs` from the local `tracks` cache (falling back to an iTunes `/lookup` call for any cache misses), and returns JSON.
 5. `responseTime` finishes and logs `[timestamp] METHOD PATH STATUS DURATIONms` to stdout. The same value is set as the `X-Response-Time` response header.
 
 ---
@@ -99,7 +99,7 @@ Collections:
 - Node.js 18+
 - MongoDB running locally (or a hosted URI) — `mongodb://localhost:27017/spotify-clone` by default
 - A free Clerk account → `https://clerk.com` → create app → copy publishable + secret keys
-- Spotify developer credentials → `https://developer.spotify.com/dashboard` → create app → copy client ID + secret
+- No music-API keys needed — the catalog comes from Apple's free iTunes Search API
 
 ### 1. Server
 
@@ -107,7 +107,7 @@ Collections:
 cd server
 cp .env.example .env       # fill in the real values
 npm install
-npm run seed               # one-time: pulls 600 tracks from Spotify into MongoDB
+npm run seed               # one-time: pulls 600+ tracks from iTunes into MongoDB
 npm run dev                # nodemon on http://localhost:5000
 ```
 
@@ -118,8 +118,6 @@ PORT=5000
 MONGODB_URI=mongodb://localhost:27017/spotify-clone
 CLERK_PUBLISHABLE_KEY=pk_test_xxx
 CLERK_SECRET_KEY=sk_test_xxx
-SPOTIFY_CLIENT_ID=xxx
-SPOTIFY_CLIENT_SECRET=xxx
 CLIENT_ORIGIN=http://localhost:5173
 ```
 
@@ -207,16 +205,16 @@ The same duration is set as the `X-Response-Time` header on each response, so yo
 | `GET /api/songs?page=1&limit=20` | ~5 ms | ~12 ms | Pure Mongo, indexed sort |
 | `GET /api/songs/:id` (cache hit) | ~3 ms | ~8 ms | Single-document `findOne` on `spotifyId` index |
 | `GET /api/users/me/liked` | ~10 ms | ~25 ms | Two Mongo queries + Clerk JWT verify |
-| `GET /api/search?q=...` | ~180 ms | ~320 ms | Round-trip to Spotify (external API; not cached at request time) |
+| `GET /api/search?q=...` | ~180 ms | ~320 ms | Round-trip to iTunes (external API; not cached at request time) |
 
-All cached endpoints stay well under 200ms. The only endpoint that ever exceeds it is `/api/search`, which is bounded by Spotify's response time.
+All cached endpoints stay well under 200ms. The only endpoint that ever exceeds it is `/api/search`, which is bounded by the iTunes API's response time.
 
 ### How the <200ms target is hit
 
-1. **MongoDB as a write-through cache.** `npm run seed` populates the `tracks` collection with 600 tracks once. Every subsequent `/api/songs`, `/api/songs/:id`, playlist hydrate, and liked-songs hydrate reads from Mongo, not Spotify. Cache misses (e.g. a search hitting a track not yet seeded) are upserted on read, so the cache grows over time.
+1. **MongoDB as a write-through cache.** `npm run seed` populates the `tracks` collection with 600+ tracks once. Every subsequent `/api/songs`, `/api/songs/:id`, playlist hydrate, and liked-songs hydrate reads from Mongo, not the iTunes API. Cache misses (e.g. a search hitting a track not yet seeded) are upserted on read, so the cache grows over time.
 2. **Indexes.** `spotifyId` (unique), `userId` on playlists, `clerkUserId` (unique) on users — every read path hits a covering or scanning index.
 3. **Pagination.** `/api/songs` defaults to `limit=20` with a hard ceiling of 100, so the home feed never ships 500 documents in a single response.
-4. **Spotify token caching.** `lib/spotify.js` caches the client-credentials access token in memory until 30s before expiry. We never spend a request fetching a token when one is still valid.
+4. **Batch hydration.** Playlist/liked cache misses are resolved with a single iTunes `/lookup?id=1,2,3` call rather than one request per track.
 5. **Lean reads.** Controllers use `.lean()` on Mongoose queries to skip hydration overhead and return plain objects.
 
 ### Frontend performance
@@ -235,22 +233,18 @@ All cached endpoints stay well under 200ms. The only endpoint that ever exceeds 
 
 ---
 
-## A note on Spotify `preview_url`
+## A note on the catalog data source
 
-Spotify deprecated the `preview_url` field for newly-registered apps in November 2024. Apps registered before that date still receive 30s preview URLs; new apps get `null`.
-
-The seed script reports how many cached tracks have a preview:
+The catalog is sourced from Apple's **iTunes Search API** (`https://itunes.apple.com/search`) — free, keyless, reliable from serverless/cloud IPs, and it returns a real 30-second `previewUrl` plus `trackTimeMillis` (duration) for virtually every track, so audio playback works out of the box. The seed script reports coverage:
 
 ```
-Track collection size: 600
-Tracks with a preview_url: 0
-Note: 0 tracks have preview_url...
+Track collection size: 735
+Tracks with a preview_url: 734
 ```
 
-If yours comes back as 0, the catalog will still render and all CRUD/auth features work, but the Player's Play button stays disabled with a "No 30s preview available" hint. To get audio playback:
+The iTunes API is rate-limited (~20 calls/min), so `scripts/seed.js` throttles between queries. If a preview ever comes back empty for a track, the Player gracefully degrades — the Play button disables with a "No 30s preview available" hint.
 
-- Use a Spotify app registered before Nov 2024, or
-- Wire in a Deezer fallback: their `https://api.deezer.com/search` endpoint returns a 30s `preview` URL per track with no auth required. The Player already gracefully degrades when `previewUrl` is empty, so adding the fallback is a small change in `server/lib/spotify.js` `normalizeTrack`.
+> Why not the Spotify Web API? Spotify now requires the app owner to hold an active **Premium** subscription to call the Web API at all, and it deprecated `preview_url` for new apps (Nov 2024) — so a fresh Spotify app returns `403` and/or `null` previews. iTunes avoids both problems. The `spotifyId` field name is kept purely for compatibility; it holds the external catalog id (an iTunes `trackId`).
 
 ---
 
@@ -260,7 +254,7 @@ If yours comes back as 0, the catalog will still render and all CRUD/auth featur
 |---|---|---|
 | `server/` | `npm run dev` | Start the API with nodemon |
 | `server/` | `npm start` | Start the API in production mode |
-| `server/` | `npm run seed` | Seed 600 tracks from Spotify into MongoDB |
+| `server/` | `npm run seed` | Seed 600+ tracks from iTunes into MongoDB |
 | `client/` | `npm run dev` | Start Vite dev server |
 | `client/` | `npm run build` | Build for production |
 | `client/` | `npm run preview` | Preview the production build |
@@ -276,19 +270,17 @@ If yours comes back as 0, the catalog will still render and all CRUD/auth featur
 | `MONGODB_URI` | ✅ | MongoDB Atlas → Connect → Drivers |
 | `CLERK_PUBLISHABLE_KEY` | ✅ | [clerk.com](https://clerk.com) → app → API Keys (`pk_...`) |
 | `CLERK_SECRET_KEY` | ✅ | Clerk → API Keys (`sk_...`) |
-| `SPOTIFY_CLIENT_ID` | ✅¹ | [developer.spotify.com](https://developer.spotify.com/dashboard) → app |
-| `SPOTIFY_CLIENT_SECRET` | ✅¹ | Spotify dashboard → app settings |
 | `CLIENT_ORIGIN` | ✅ | Deployed frontend URL (for CORS) |
-| `PORT` / `NODE_ENV` | ⬜ | Set automatically by Render |
+| `PORT` / `NODE_ENV` | ⬜ | Set automatically by the host |
 
-¹ Spotify keys are only needed to **seed** the catalog (`npm run seed`). After the 500+ tracks are in MongoDB, the running app serves them from the database.
+> No music-API keys are required — the catalog comes from the free iTunes Search API.
 
 ### Frontend (`client/.env`)
 
 | Variable | Required | Description |
 |----------|:--------:|-------------|
 | `VITE_CLERK_PUBLISHABLE_KEY` | ✅ | Same Clerk publishable key (`pk_...`) |
-| `VITE_API_BASE_URL` | ✅ | Backend base URL, e.g. `https://<your-api>.onrender.com/api` |
+| `VITE_API_BASE_URL` | ✅ | API base URL — `/api` for the all-in-one Vercel deploy |
 
 > 🔒 `.env` files are gitignored — use the `.env.example` templates and never commit real keys.
 
@@ -305,15 +297,15 @@ Create a free **M0** cluster, add a DB user, allow network access from `0.0.0.0/
 
 ### 2. Free API keys
 - **Clerk:** [clerk.com](https://clerk.com) → create application → copy publishable + secret keys.
-- **Spotify:** [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) → create app → copy Client ID + Secret.
+- No music-API keys needed — the catalog is seeded from the free iTunes Search API.
 
 ### 3. Seed the catalog (one-time, locally)
 ```bash
 cd spotify-clone/server
-cp .env.example .env    # fill MONGODB_URI + SPOTIFY_* keys (point MONGODB_URI at Atlas)
-npm install && npm run seed   # loads 600 tracks into Atlas
+cp .env.example .env    # set MONGODB_URI to your Atlas connection string
+npm install && npm run seed   # loads 600+ tracks into Atlas from iTunes
 ```
-The running app serves the catalog from MongoDB, so Spotify keys are only needed for this one-time seed.
+The running app serves the catalog from MongoDB, so this seed is only needed once.
 
 ### 4. Deploy to Vercel
 [vercel.com](https://vercel.com) → **Add New → Project** → import this repo, then:

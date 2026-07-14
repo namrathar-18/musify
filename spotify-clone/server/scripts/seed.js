@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import { connectDB } from '../config/db.js';
 import Track from '../models/Track.js';
-import { searchTracksForSeed, normalizeTrack } from '../lib/spotify.js';
+import { searchTracksForSeed, normalizeTrack } from '../lib/itunes.js';
 
 dotenv.config();
 
@@ -30,6 +30,8 @@ const SEED_QUERIES = [
 
 const TARGET_COUNT = 600; // a comfortable margin above the 500 requirement
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const run = async () => {
   await connectDB();
 
@@ -38,29 +40,30 @@ const run = async () => {
   for (const query of SEED_QUERIES) {
     if (collected.size >= TARGET_COUNT) break;
 
-    // Two pages per query = up to 100 tracks each
-    for (const offset of [0, 50]) {
-      if (collected.size >= TARGET_COUNT) break;
-      try {
-        const items = await searchTracksForSeed(query, 50, offset);
-        for (const t of items) {
-          if (!t || !t.id) continue;
-          if (!collected.has(t.id)) {
-            collected.set(t.id, normalizeTrack(t));
-          }
+    try {
+      // One call per query at the API's max page size (200). The iTunes Search
+      // API is rate-limited (~20 calls/min), so we throttle between queries.
+      const items = await searchTracksForSeed(query, 200, 0);
+      for (const t of items) {
+        if (!t || !t.trackId) continue;
+        const track = normalizeTrack(t);
+        if (!collected.has(track.spotifyId)) {
+          collected.set(track.spotifyId, track);
         }
-        console.log(`"${query}" offset=${offset}: collected=${collected.size}`);
-      } catch (err) {
-        console.warn(`Query "${query}" offset=${offset} failed:`, err.message);
       }
+      console.log(`"${query}": +${items.length} → collected=${collected.size}`);
+    } catch (err) {
+      console.warn(`Query "${query}" failed:`, err.message);
     }
+
+    await sleep(3500);
   }
 
   const tracks = Array.from(collected.values());
   console.log(`Total unique tracks: ${tracks.length}`);
 
   if (!tracks.length) {
-    console.error('No tracks collected — check Spotify credentials in .env');
+    console.error('No tracks collected — check your network connection to the iTunes API');
     process.exit(1);
   }
 
@@ -82,10 +85,7 @@ const run = async () => {
   console.log(`Track collection size: ${total}`);
   console.log(`Tracks with a preview_url: ${withPreview}`);
   if (withPreview === 0) {
-    console.warn(
-      '\nNote: 0 tracks have preview_url. This is expected for newer Spotify apps\n' +
-        '(Spotify deprecated preview_url for new apps in Nov 2024). Older apps still get them.\n'
-    );
+    console.warn('\nNote: 0 tracks have a preview_url — audio playback will be disabled.\n');
   }
 
   await mongoose.disconnect();
