@@ -6,6 +6,7 @@ import { clerkMiddleware } from '@clerk/express';
 import { connectDB } from './config/db.js';
 import { responseTime } from './middleware/responseTime.middleware.js';
 import { errorHandler } from './middleware/error.middleware.js';
+import { securityHeaders, rateLimit } from './middleware/security.middleware.js';
 
 import songsRoutes from './routes/songs.routes.js';
 import searchRoutes from './routes/search.routes.js';
@@ -29,7 +30,9 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
+app.use(securityHeaders);
+app.use(rateLimit);
 app.use(responseTime);
 
 // Clerk attaches req.auth to every request; individual routes opt into requireAuth

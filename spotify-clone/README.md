@@ -1,6 +1,6 @@
-# 🎵 Musify — Spotify Clone (MERN + Clerk + iTunes Search API)
+# 🎵 Musify — AI-Powered Music Discovery (MERN + Clerk + Groq)
 
-A full-stack music streaming clone built with React, Express, MongoDB, and Clerk auth. Browse a catalog of 500+ tracks sourced from Apple's free iTunes Search API and cached in MongoDB, create playlists, like songs, and stream real 30-second previews — all with a Spotify-style UI.
+A full-stack, AI-powered music platform built with React, Express, MongoDB, Clerk auth, and Groq (Llama 3.3 70B). Stream 30-second previews from a 700+ track catalog, chat with an **AI assistant that answers with playable songs**, generate playlists from natural-language prompts, stream **full podcast episodes**, explore artist/album pages and charts, and track your listening with a stats dashboard (streaks, heatmaps, AI weekly report).
 
 <p align="center">
   <a href="#-cloud-deployment--one-vercel-project-client--api"><b>🚀 Deploy Guide</b></a> &nbsp;•&nbsp;
@@ -178,7 +178,23 @@ All `/api/playlists/*` and `/api/users/me/*` endpoints require `Authorization: B
 | GET    | `/api/users/me/liked` | ✓ | Liked songs (hydrated) |
 | POST   | `/api/users/me/liked/:trackId` | ✓ | Toggle like on a track |
 | GET    | `/api/users/me/recent` | ✓ | Recently played (hydrated, max 50) |
-| POST   | `/api/users/me/recent/:trackId` | ✓ | Record a play |
+| POST   | `/api/users/me/recent/:trackId` | ✓ | Record a play (also logs to the durable stats store) |
+| GET    | `/api/users/me/stats?days=&tz=` | ✓ | Listening stats: totals, top artists/tracks/genres, hour & day buckets, streaks |
+| GET    | `/api/charts/trending` | — | Top chart songs (hydrated with previews, TTL-cached) |
+| GET    | `/api/charts/top-albums` | — | Top chart albums |
+| GET    | `/api/charts/new-releases` | — | Recent releases from the charts |
+| GET    | `/api/charts/song-of-the-day` | — | Deterministic daily pick |
+| GET    | `/api/charts/genre/:genre` | — | Genre row for the home page |
+| GET    | `/api/artists/:id` | — | Artist profile + top songs + albums |
+| GET    | `/api/albums/:id` | — | Album + full track list |
+| GET    | `/api/podcasts/top` | — | Top podcasts (Apple RSS) |
+| GET    | `/api/podcasts/search?q=` | — | Podcast search |
+| GET    | `/api/podcasts/:id` | — | Show + episodes (parsed from the public RSS feed) |
+| GET    | `/api/ai/status` | — | Whether AI features are configured |
+| POST   | `/api/ai/chat` | ✓ | Music assistant chat → reply + playable tracks |
+| POST   | `/api/ai/playlist` | ✓ | Prompt → real playlist saved to your library |
+| POST   | `/api/ai/search` | ✓ | Natural-language search → tracks |
+| GET    | `/api/ai/weekly-report` | ✓ | Personalized weekly listening recap |
 
 See `docs/postman_collection.json` and `docs/curl_examples.sh` for ready-to-run examples.
 
@@ -255,6 +271,7 @@ The iTunes API is rate-limited (~20 calls/min), so `scripts/seed.js` throttles b
 | `server/` | `npm run dev` | Start the API with nodemon |
 | `server/` | `npm start` | Start the API in production mode |
 | `server/` | `npm run seed` | Seed 600+ tracks from iTunes into MongoDB |
+| `server/` | `npm test` | Run the API/unit test suite (Vitest + Supertest + in-memory Mongo) |
 | `client/` | `npm run dev` | Start Vite dev server |
 | `client/` | `npm run build` | Build for production |
 | `client/` | `npm run preview` | Preview the production build |
@@ -270,10 +287,11 @@ The iTunes API is rate-limited (~20 calls/min), so `scripts/seed.js` throttles b
 | `MONGODB_URI` | ✅ | MongoDB Atlas → Connect → Drivers |
 | `CLERK_PUBLISHABLE_KEY` | ✅ | [clerk.com](https://clerk.com) → app → API Keys (`pk_...`) |
 | `CLERK_SECRET_KEY` | ✅ | Clerk → API Keys (`sk_...`) |
+| `GROQ_API_KEY` | ⬜ | [console.groq.com](https://console.groq.com) — enables the AI assistant, AI playlists, smart search & weekly report (free tier). Without it the app runs with AI features hidden. |
 | `CLIENT_ORIGIN` | ✅ | Deployed frontend URL (for CORS) |
 | `PORT` / `NODE_ENV` | ⬜ | Set automatically by the host |
 
-> No music-API keys are required — the catalog comes from the free iTunes Search API.
+> No music-API keys are required — catalog, charts, and podcasts come from Apple's free public APIs.
 
 ### Frontend (`client/.env`)
 
@@ -321,6 +339,7 @@ The running app serves the catalog from MongoDB, so this seed is only needed onc
   | `CLERK_SECRET_KEY` | `sk_live_...` (or `sk_test_...`) |
   | `VITE_CLERK_PUBLISHABLE_KEY` | same publishable key as above |
   | `VITE_API_BASE_URL` | `/api` |
+  | `GROQ_API_KEY` | (optional) enables all AI features |
   | `CLIENT_ORIGIN` | your Vercel URL, e.g. `https://musify.vercel.app` |
 
   Spotify keys are **not** required in Vercel (seeding already happened in step 3).

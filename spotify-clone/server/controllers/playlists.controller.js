@@ -70,8 +70,8 @@ export const createPlaylist = asyncHandler(async (req, res) => {
 
   const playlist = await Playlist.create({
     userId,
-    name: name.trim(),
-    description: description?.trim() || '',
+    name: name.trim().slice(0, 100),
+    description: (description?.trim() || '').slice(0, 300),
     tracks: [],
   });
 
@@ -85,8 +85,8 @@ export const updatePlaylist = asyncHandler(async (req, res) => {
   const { name, description } = req.body;
 
   const update = {};
-  if (name !== undefined) update.name = name.trim();
-  if (description !== undefined) update.description = description.trim();
+  if (name !== undefined) update.name = String(name).trim().slice(0, 100);
+  if (description !== undefined) update.description = String(description).trim().slice(0, 300);
 
   const playlist = await Playlist.findOneAndUpdate(
     { _id: id, userId },
