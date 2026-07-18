@@ -58,3 +58,41 @@ export const toggleLike = (trackId) =>
 export const fetchRecent = () => api.get('/users/me/recent').then((r) => r.data);
 export const recordPlay = (trackId) =>
   api.post(`/users/me/recent/${trackId}`).then((r) => r.data);
+
+// Stats — tz is the client's UTC offset so day/hour buckets are local
+const tzOffset = () => {
+  const m = -new Date().getTimezoneOffset();
+  const sign = m < 0 ? '-' : '+';
+  const abs = Math.abs(m);
+  return `${sign}${String(Math.floor(abs / 60)).padStart(2, '0')}:${String(abs % 60).padStart(2, '0')}`;
+};
+export const fetchStats = (days = 30) =>
+  api.get('/users/me/stats', { params: { days, tz: tzOffset() } }).then((r) => r.data);
+
+// Charts / discovery
+export const fetchTrending = () => api.get('/charts/trending').then((r) => r.data);
+export const fetchTopAlbums = () => api.get('/charts/top-albums').then((r) => r.data);
+export const fetchNewReleases = () => api.get('/charts/new-releases').then((r) => r.data);
+export const fetchSongOfTheDay = () => api.get('/charts/song-of-the-day').then((r) => r.data);
+export const fetchGenreRow = (genre) =>
+  api.get(`/charts/genre/${encodeURIComponent(genre)}`).then((r) => r.data);
+
+// Artists / albums
+export const fetchArtist = (id) => api.get(`/artists/${id}`).then((r) => r.data);
+export const fetchAlbum = (id) => api.get(`/albums/${id}`).then((r) => r.data);
+
+// Podcasts
+export const fetchTopPodcasts = () => api.get('/podcasts/top').then((r) => r.data);
+export const searchPodcasts = (q) =>
+  api.get('/podcasts/search', { params: { q } }).then((r) => r.data);
+export const fetchPodcast = (id) => api.get(`/podcasts/${id}`).then((r) => r.data);
+
+// AI
+export const fetchAiStatus = () => api.get('/ai/status').then((r) => r.data);
+export const aiChat = (messages) =>
+  api.post('/ai/chat', { messages }).then((r) => r.data);
+export const aiGeneratePlaylist = (prompt) =>
+  api.post('/ai/playlist', { prompt }).then((r) => r.data);
+export const aiSearch = (query) =>
+  api.post('/ai/search', { query }).then((r) => r.data);
+export const aiWeeklyReport = () => api.get('/ai/weekly-report').then((r) => r.data);

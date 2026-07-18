@@ -1,12 +1,32 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, Search, Library, Heart, Plus, LogOut } from 'lucide-react';
+import {
+  Home,
+  Search,
+  Library,
+  Heart,
+  Plus,
+  LogOut,
+  Mic2,
+  Sparkles,
+  BarChart3,
+} from 'lucide-react';
 import { useUser, useClerk, SignInButton } from '@clerk/clerk-react';
 import { useLibraryStore } from '../store/useLibraryStore';
+import { toast } from '../store/useToastStore';
 import { useState } from 'react';
 
 const navItem =
-  'flex items-center gap-3 px-3 py-2 rounded text-spotify-light hover:text-white transition-colors';
-const activeItem = 'text-white';
+  'flex items-center gap-3 px-3 py-2 rounded-lg text-muted hover:text-white transition-colors';
+const activeItem = 'text-white bg-white/5';
+
+const NavEntry = ({ to, icon: Icon, label }) => (
+  <NavLink
+    to={to}
+    className={({ isActive }) => `${navItem} ${isActive ? activeItem : ''}`}
+  >
+    <Icon size={20} /> <span className="font-semibold">{label}</span>
+  </NavLink>
+);
 
 export default function Sidebar() {
   const { isSignedIn, user } = useUser();
@@ -22,38 +42,44 @@ export default function Sidebar() {
     try {
       const p = await createPlaylist(`My Playlist #${playlists.length + 1}`);
       navigate(`/playlist/${p._id}`);
+    } catch {
+      toast('Could not create playlist', 'error');
     } finally {
       setCreating(false);
     }
   };
 
   return (
-    <aside className="flex flex-col gap-2 w-60 shrink-0 p-2 h-full">
-      <div className="bg-spotify-dark rounded-lg p-3 space-y-1">
-        <NavLink
-          to="/"
-          className={({ isActive }) => `${navItem} ${isActive ? activeItem : ''}`}
-        >
-          <Home size={20} /> <span className="font-semibold">Home</span>
-        </NavLink>
-        <NavLink
-          to="/search"
-          className={({ isActive }) => `${navItem} ${isActive ? activeItem : ''}`}
-        >
-          <Search size={20} /> <span className="font-semibold">Search</span>
-        </NavLink>
+    <aside className="hidden md:flex flex-col gap-2 w-64 shrink-0 p-2 h-full">
+      {/* Brand */}
+      <div className="bg-surface-900 rounded-xl p-4">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-accent-deep flex items-center justify-center font-extrabold text-white">
+            M
+          </div>
+          <span className="text-lg font-extrabold tracking-tight">Musify</span>
+        </div>
       </div>
 
-      <div className="bg-spotify-dark rounded-lg p-3 flex-1 overflow-y-auto">
+      <nav className="bg-surface-900 rounded-xl p-3 space-y-1" aria-label="Primary">
+        <NavEntry to="/" icon={Home} label="Home" />
+        <NavEntry to="/search" icon={Search} label="Search" />
+        <NavEntry to="/podcasts" icon={Mic2} label="Podcasts" />
+        <NavEntry to="/assistant" icon={Sparkles} label="AI Assistant" />
+        <NavEntry to="/stats" icon={BarChart3} label="Stats" />
+      </nav>
+
+      <div className="bg-surface-900 rounded-xl p-3 flex-1 overflow-y-auto">
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3 text-spotify-light">
+          <div className="flex items-center gap-3 text-muted px-1">
             <Library size={20} />
             <span className="font-semibold">Your Library</span>
           </div>
           <button
             onClick={handleCreate}
             disabled={!isSignedIn || creating}
-            className="p-1 rounded hover:bg-white/10 disabled:opacity-40"
+            className="p-1 rounded-md hover:bg-white/10 disabled:opacity-40"
+            aria-label="Create playlist"
             title="Create playlist"
           >
             <Plus size={18} />
@@ -68,7 +94,7 @@ export default function Sidebar() {
                 `${navItem} text-sm ${isActive ? activeItem : ''}`
               }
             >
-              <div className="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-pink-400 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-md bg-gradient-to-br from-accent-deep to-pink-500 flex items-center justify-center shrink-0">
                 <Heart size={14} className="fill-white text-white" />
               </div>
               <span>Liked Songs</span>
@@ -82,7 +108,7 @@ export default function Sidebar() {
                   `${navItem} text-sm truncate ${isActive ? activeItem : ''}`
                 }
               >
-                <div className="w-8 h-8 rounded bg-spotify-gray flex items-center justify-center text-xs">
+                <div className="w-8 h-8 rounded-md bg-surface-700 flex items-center justify-center text-xs shrink-0">
                   {p.name.charAt(0).toUpperCase()}
                 </div>
                 <span className="truncate">{p.name}</span>
@@ -90,26 +116,27 @@ export default function Sidebar() {
             ))}
           </div>
         ) : (
-          <div className="text-sm text-spotify-light px-3 py-2">
+          <div className="text-sm text-muted px-3 py-2">
             Sign in to create playlists.
           </div>
         )}
       </div>
 
-      <div className="bg-spotify-dark rounded-lg p-3">
+      <div className="bg-surface-900 rounded-xl p-3">
         {isSignedIn ? (
           <div className="flex items-center justify-between">
             <div className="text-sm truncate">
               <div className="font-semibold truncate">
                 {user?.fullName || user?.username || 'You'}
               </div>
-              <div className="text-spotify-light text-xs truncate">
+              <div className="text-muted text-xs truncate">
                 {user?.primaryEmailAddress?.emailAddress}
               </div>
             </div>
             <button
               onClick={() => signOut()}
-              className="p-2 rounded hover:bg-white/10"
+              className="p-2 rounded-md hover:bg-white/10"
+              aria-label="Sign out"
               title="Sign out"
             >
               <LogOut size={16} />
@@ -117,7 +144,7 @@ export default function Sidebar() {
           </div>
         ) : (
           <SignInButton mode="modal">
-            <button className="w-full bg-white text-black font-semibold py-2 rounded-full hover:scale-105 transition-transform">
+            <button className="w-full bg-white text-black font-semibold py-2 rounded-full hover:scale-[1.02] transition-transform">
               Sign In
             </button>
           </SignInButton>

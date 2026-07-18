@@ -19,7 +19,7 @@ export default function Liked() {
 
   if (loading)
     return (
-      <div className="flex items-center text-spotify-light">
+      <div className="flex items-center text-muted">
         <Loader2 className="animate-spin mr-2" /> Loading…
       </div>
     );
@@ -27,16 +27,16 @@ export default function Liked() {
 
   return (
     <div>
-      <div className="flex items-end gap-6 mb-8">
-        <div className="w-48 h-48 rounded bg-gradient-to-br from-indigo-500 to-pink-400 shadow-2xl shrink-0 flex items-center justify-center">
+      <div className="flex items-end gap-6 mb-8 animate-fade-up">
+        <div className="w-36 h-36 md:w-48 md:h-48 rounded-xl bg-gradient-to-br from-accent-deep to-pink-500 shadow-2xl shrink-0 flex items-center justify-center">
           <Heart size={64} className="fill-white text-white" />
         </div>
         <div>
-          <div className="text-xs uppercase tracking-wider text-spotify-light mb-2">
+          <div className="text-xs uppercase tracking-widest text-muted mb-2">
             Playlist
           </div>
-          <h1 className="text-5xl font-bold">Liked Songs</h1>
-          <div className="text-spotify-light text-sm mt-3">{tracks.length} tracks</div>
+          <h1 className="text-3xl md:text-5xl font-extrabold">Liked Songs</h1>
+          <div className="text-muted text-sm mt-3">{tracks.length} tracks</div>
         </div>
       </div>
 
@@ -44,19 +44,20 @@ export default function Liked() {
         <button
           onClick={() => playQueue(tracks, 0)}
           disabled={tracks.length === 0}
-          className="bg-spotify-green hover:bg-green-500 text-black rounded-full w-14 h-14 flex items-center justify-center disabled:opacity-40 hover:scale-105 transition-transform"
+          aria-label="Play liked songs"
+          className="bg-accent-deep hover:bg-accent text-white rounded-full w-14 h-14 flex items-center justify-center disabled:opacity-40 hover:scale-105 transition-all"
         >
-          <Play size={24} className="ml-1 fill-black" />
+          <Play size={24} className="ml-1 fill-white" />
         </button>
       </div>
 
       {tracks.length === 0 ? (
-        <div className="text-spotify-light text-center py-12">
+        <div className="text-muted text-center py-12">
           You haven't liked any songs yet. Tap the heart on any track.
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-[2rem,1fr,1fr,4rem,auto] gap-4 px-4 pb-2 border-b border-white/10 text-xs uppercase tracking-wider text-spotify-light">
+          <div className="grid grid-cols-[2rem,1fr,1fr,4rem,auto] gap-4 px-4 pb-2 border-b border-white/10 text-xs uppercase tracking-wider text-muted">
             <div>#</div>
             <div>Title</div>
             <div>Album</div>

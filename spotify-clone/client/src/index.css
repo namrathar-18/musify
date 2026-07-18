@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,13 +10,21 @@ html, body, #root {
 }
 
 body {
-  font-family: 'Circular', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #000;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: #0a0a0f;
   color: #fff;
   overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Custom range styling for the seek bar */
+/* Accessible focus rings for keyboard users */
+:focus-visible {
+  outline: 2px solid #a78bfa;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Custom range styling for seek + volume bars */
 input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
@@ -22,7 +32,7 @@ input[type='range'] {
   cursor: pointer;
 }
 input[type='range']::-webkit-slider-runnable-track {
-  background: #4d4d4d;
+  background: #3a3a48;
   height: 4px;
   border-radius: 2px;
 }
@@ -36,10 +46,13 @@ input[type='range']::-webkit-slider-thumb {
   margin-top: -4px;
 }
 input[type='range']:hover::-webkit-slider-runnable-track {
-  background: #5d5d5d;
+  background: #4a4a5c;
+}
+input[type='range']:hover::-webkit-slider-thumb {
+  background: #a78bfa;
 }
 input[type='range']::-moz-range-track {
-  background: #4d4d4d;
+  background: #3a3a48;
   height: 4px;
   border-radius: 2px;
 }
@@ -53,19 +66,27 @@ input[type='range']::-moz-range-thumb {
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #4d4d4d;
+  background: #3a3a48;
   border-radius: 6px;
-  border: 3px solid transparent;
+  border: 2px solid transparent;
   background-clip: content-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #6d6d6d;
+  background: #4a4a5c;
   background-clip: content-box;
+}
+
+/* Hide scrollbars inside horizontal card rows without killing scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
 }

@@ -34,11 +34,11 @@ export default function Library() {
         </button>
       </div>
 
-      {loading && <div className="text-spotify-light">Loading…</div>}
+      {loading && <div className="text-muted">Loading…</div>}
       {error && <div className="text-red-400">{error}</div>}
 
       {!loading && playlists.length === 0 && (
-        <div className="text-spotify-light">
+        <div className="text-muted">
           No playlists yet. Create one to get started.
         </div>
       )}
