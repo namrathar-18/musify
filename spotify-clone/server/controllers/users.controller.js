@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import Track from '../models/Track.js';
+import Play from '../models/Play.js';
 import { getUserId } from '../middleware/auth.middleware.js';
 import { asyncHandler } from '../middleware/error.middleware.js';
 import { getTracksByIds } from '../lib/itunes.js';
@@ -126,6 +127,24 @@ export const recordPlay = asyncHandler(async (req, res) => {
     user.recentlyPlayed = user.recentlyPlayed.slice(0, 50);
   }
   await user.save();
+
+  // Durable play log for the stats dashboard (best-effort, non-blocking)
+  Track.findOne({ spotifyId: trackId })
+    .lean()
+    .then((t) =>
+      Play.create({
+        userId,
+        spotifyId: trackId,
+        title: t?.title || '',
+        artist: t?.artist || '',
+        artistId: t?.artistId || '',
+        genre: t?.genre || '',
+        albumArt: t?.albumArt || '',
+        listenedMs: Math.min(t?.duration || 30000, 30000),
+      })
+    )
+    .catch((err) => console.warn('Play log failed:', err.message));
+
   res.json({ success: true });
 });
 

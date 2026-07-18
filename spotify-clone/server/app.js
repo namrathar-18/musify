@@ -11,6 +11,13 @@ import songsRoutes from './routes/songs.routes.js';
 import searchRoutes from './routes/search.routes.js';
 import playlistsRoutes from './routes/playlists.routes.js';
 import usersRoutes from './routes/users.routes.js';
+import {
+  chartsRouter,
+  artistsRouter,
+  albumsRouter,
+  podcastsRouter,
+} from './routes/discover.routes.js';
+import aiRoutes from './routes/ai.routes.js';
 
 dotenv.config();
 
@@ -49,6 +56,11 @@ app.use('/api/songs', withDB, songsRoutes);
 app.use('/api/search', withDB, searchRoutes);
 app.use('/api/playlists', withDB, playlistsRoutes);
 app.use('/api/users', withDB, usersRoutes);
+app.use('/api/charts', withDB, chartsRouter);
+app.use('/api/artists', withDB, artistsRouter);
+app.use('/api/albums', withDB, albumsRouter);
+app.use('/api/podcasts', withDB, podcastsRouter);
+app.use('/api/ai', withDB, aiRoutes);
 
 app.use('/api', (req, res) => {
   res.status(404).json({ error: 'Not found' });

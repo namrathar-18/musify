@@ -17,14 +17,18 @@ export const normalizeTrack = (t) => ({
   spotifyId: String(t.trackId),
   title: t.trackName || '',
   artist: t.artistName || '',
+  artistId: t.artistId ? String(t.artistId) : '',
   album: t.collectionName || '',
+  albumId: t.collectionId ? String(t.collectionId) : '',
   albumArt: hiResArt(t.artworkUrl100 || ''),
   previewUrl: t.previewUrl || '',
   duration: t.trackTimeMillis || 0, // already milliseconds
+  genre: t.primaryGenreName || '',
+  releaseDate: (t.releaseDate || '').slice(0, 10),
 });
 
-// The iTunes endpoint occasionally cold-times-out on the first hit; retry once.
-const getWithRetry = async (url, config, retries = 1) => {
+// Apple endpoints occasionally cold-time-out on the first hit; retry once.
+export const getWithRetry = async (url, config, retries = 1) => {
   try {
     return await axios.get(url, { timeout: 20000, ...config });
   } catch (err) {
@@ -106,4 +110,113 @@ export const getTrackById = async (id) => {
     throw err;
   }
   return track;
+};
+
+const notFound = (what) => {
+  const err = new Error(`${what} not found`);
+  err.status = 404;
+  return err;
+};
+
+// Apple ids are numeric; reject anything else before it hits the API as a 400.
+const assertNumericId = (id, what) => {
+  if (!/^\d+$/.test(String(id))) throw notFound(what);
+};
+
+// Artist page: profile + top songs + albums, in two /lookup calls.
+export const getArtistWithContent = async (artistId) => {
+  assertNumericId(artistId, 'Artist');
+  const [songsRes, albumsRes] = await Promise.all([
+    getWithRetry(`${API}/lookup`, { params: { id: artistId, entity: 'song', limit: 25 } }),
+    getWithRetry(`${API}/lookup`, { params: { id: artistId, entity: 'album', limit: 20 } }),
+  ]);
+
+  const songResults = songsRes.data.results || [];
+  const albumResults = albumsRes.data.results || [];
+  const profile = songResults.find((r) => r.wrapperType === 'artist') ||
+    albumResults.find((r) => r.wrapperType === 'artist');
+  if (!profile) throw notFound('Artist');
+
+  const topSongs = songResults
+    .filter((r) => r.wrapperType === 'track' || r.kind === 'song')
+    .map(normalizeTrack);
+
+  const albums = albumResults
+    .filter((r) => r.wrapperType === 'collection')
+    .map((al) => ({
+      id: String(al.collectionId),
+      name: al.collectionName || '',
+      artist: al.artistName || '',
+      image: hiResArt(al.artworkUrl100 || ''),
+      releaseDate: (al.releaseDate || '').slice(0, 10),
+      trackCount: al.trackCount || 0,
+    }));
+
+  return {
+    artist: {
+      id: String(profile.artistId),
+      name: profile.artistName || '',
+      genre: profile.primaryGenreName || '',
+      // Artist lookups carry no artwork; borrow the latest album's art.
+      image: albums[0]?.image || topSongs[0]?.albumArt || '',
+    },
+    topSongs,
+    albums,
+  };
+};
+
+// Album page: collection info + full track list, one /lookup call.
+export const getAlbumWithTracks = async (albumId) => {
+  assertNumericId(albumId, 'Album');
+  const { data } = await getWithRetry(`${API}/lookup`, {
+    params: { id: albumId, entity: 'song', limit: 200 },
+  });
+  const results = data.results || [];
+  const info = results.find((r) => r.wrapperType === 'collection');
+  if (!info) throw notFound('Album');
+
+  const tracks = results
+    .filter((r) => r.wrapperType === 'track' || r.kind === 'song')
+    .map(normalizeTrack);
+
+  return {
+    album: {
+      id: String(info.collectionId),
+      name: info.collectionName || '',
+      artist: info.artistName || '',
+      artistId: info.artistId ? String(info.artistId) : '',
+      image: hiResArt(info.artworkUrl100 || ''),
+      genre: info.primaryGenreName || '',
+      releaseDate: (info.releaseDate || '').slice(0, 10),
+      trackCount: info.trackCount || tracks.length,
+    },
+    tracks,
+  };
+};
+
+const normalizePodcast = (p) => ({
+  id: String(p.collectionId),
+  name: p.collectionName || '',
+  publisher: p.artistName || '',
+  image: hiResArt(p.artworkUrl100 || ''),
+  genres: (p.genres || []).filter((g) => g !== 'Podcasts'),
+  feedUrl: p.feedUrl || '',
+  episodeCount: p.trackCount || 0,
+  description: '',
+});
+
+export const searchPodcasts = async (q, limit = 20) => {
+  const { data } = await getWithRetry(`${API}/search`, {
+    params: { term: q, media: 'podcast', entity: 'podcast', country: 'US', limit },
+  });
+  return (data.results || []).map(normalizePodcast);
+};
+
+// Podcast show by id — returns feedUrl needed to load episodes.
+export const getPodcastById = async (id) => {
+  assertNumericId(id, 'Podcast');
+  const { data } = await getWithRetry(`${API}/lookup`, { params: { id } });
+  const show = (data.results || []).find((r) => r.kind === 'podcast');
+  if (!show) throw notFound('Podcast');
+  return normalizePodcast(show);
 };
