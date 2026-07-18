@@ -6,6 +6,7 @@ import { usePlayerStore } from './store/usePlayerStore';
 import { useLibraryStore } from './store/useLibraryStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import Sidebar from './components/Sidebar';
+import MobileHeader from './components/MobileHeader';
 import MobileNav from './components/MobileNav';
 import Player from './components/Player';
 import QueuePanel from './components/QueuePanel';
@@ -79,6 +80,7 @@ export default function App() {
 
   return (
     <div className="h-full flex flex-col bg-surface-950">
+      <MobileHeader />
       <div className="flex-1 flex min-h-0">
         <Sidebar />
         <main className="flex-1 md:m-2 md:ml-0 md:rounded-xl overflow-y-auto bg-gradient-to-b from-surface-900 to-surface-950 p-4 md:p-6 pb-8">

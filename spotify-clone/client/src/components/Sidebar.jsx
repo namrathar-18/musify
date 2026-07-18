@@ -14,6 +14,7 @@ import { useUser, useClerk, SignInButton } from '@clerk/clerk-react';
 import { useLibraryStore } from '../store/useLibraryStore';
 import { toast } from '../store/useToastStore';
 import { useState } from 'react';
+import Logo from './Logo';
 
 const navItem =
   'flex items-center gap-3 px-3 py-2 rounded-lg text-muted hover:text-white transition-colors';
@@ -53,12 +54,7 @@ export default function Sidebar() {
     <aside className="hidden md:flex flex-col gap-2 w-64 shrink-0 p-2 h-full">
       {/* Brand */}
       <div className="bg-surface-900 rounded-xl p-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-accent-deep flex items-center justify-center font-extrabold text-white">
-            M
-          </div>
-          <span className="text-lg font-extrabold tracking-tight">Musify</span>
-        </div>
+        <Logo size={32} />
       </div>
 
       <nav className="bg-surface-900 rounded-xl p-3 space-y-1" aria-label="Primary">
