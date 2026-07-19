@@ -26,6 +26,7 @@ const Podcasts = lazy(() => import('./pages/Podcasts.jsx'));
 const PodcastShow = lazy(() => import('./pages/PodcastShow.jsx'));
 const Stats = lazy(() => import('./pages/Stats.jsx'));
 const Assistant = lazy(() => import('./pages/Assistant.jsx'));
+const Premium = lazy(() => import('./pages/Premium.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
 
 const PageFallback = () => (
@@ -92,6 +93,7 @@ export default function App() {
               <Route path="/podcast/:id" element={<PodcastShow />} />
               <Route path="/artist/:id" element={<Artist />} />
               <Route path="/album/:id" element={<Album />} />
+              <Route path="/premium" element={<Premium />} />
               <Route
                 path="/library"
                 element={

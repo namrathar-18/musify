@@ -85,6 +85,13 @@ describe('public endpoints', () => {
     expect(res.body.enabled).toBe(false);
   });
 
+  it('GET /api/billing/plans lists the plan catalog', async () => {
+    const res = await request(app).get('/api/billing/plans');
+    expect(res.status).toBe(200);
+    expect(res.body.plans.length).toBe(4);
+    expect(res.body.plans.map((p) => p.id)).toContain('individual');
+  });
+
   it('sets baseline security headers', async () => {
     const res = await request(app).get('/api/health');
     expect(res.headers['x-content-type-options']).toBe('nosniff');
@@ -102,6 +109,10 @@ describe('auth gating', () => {
     ['post', '/api/ai/chat'],
     ['post', '/api/ai/playlist'],
     ['post', '/api/ai/search'],
+    ['get', '/api/billing/status'],
+    ['post', '/api/billing/checkout'],
+    ['post', '/api/billing/cancel'],
+    ['get', '/api/billing/history'],
   ];
 
   it.each(protectedRoutes)('%s %s returns JSON 401 when signed out', async (method, path) => {

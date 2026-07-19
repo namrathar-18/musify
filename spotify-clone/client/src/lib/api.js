@@ -87,6 +87,16 @@ export const searchPodcasts = (q) =>
   api.get('/podcasts/search', { params: { q } }).then((r) => r.data);
 export const fetchPodcast = (id) => api.get(`/podcasts/${id}`).then((r) => r.data);
 
+// Billing (Stripe test mode)
+export const fetchPlans = () => api.get('/billing/plans').then((r) => r.data);
+export const fetchBillingStatus = () => api.get('/billing/status').then((r) => r.data);
+export const createCheckout = (plan) =>
+  api.post('/billing/checkout', { plan }).then((r) => r.data);
+export const confirmCheckout = (sessionId) =>
+  api.post('/billing/confirm', { sessionId }).then((r) => r.data);
+export const cancelSubscription = () => api.post('/billing/cancel').then((r) => r.data);
+export const fetchBillingHistory = () => api.get('/billing/history').then((r) => r.data);
+
 // AI
 export const fetchAiStatus = () => api.get('/ai/status').then((r) => r.data);
 export const aiChat = (messages) =>

@@ -9,6 +9,7 @@ import {
   Mic2,
   Sparkles,
   BarChart3,
+  Crown,
 } from 'lucide-react';
 import { useUser, useClerk, SignInButton } from '@clerk/clerk-react';
 import { useLibraryStore } from '../store/useLibraryStore';
@@ -63,6 +64,7 @@ export default function Sidebar() {
         <NavEntry to="/podcasts" icon={Mic2} label="Podcasts" />
         <NavEntry to="/assistant" icon={Sparkles} label="AI Assistant" />
         <NavEntry to="/stats" icon={BarChart3} label="Stats" />
+        <NavEntry to="/premium" icon={Crown} label="Premium" />
       </nav>
 
       <div className="bg-surface-900 rounded-xl p-3 flex-1 overflow-y-auto">

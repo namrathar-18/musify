@@ -15,6 +15,12 @@ const userSchema = new mongoose.Schema(
     displayName: { type: String },
     likedSongs: [{ type: String }], // array of spotifyTrackIds
     recentlyPlayed: { type: [recentPlaySchema], default: [] },
+    // Premium subscription (managed via Stripe test mode)
+    premiumPlan: { type: String, default: 'free' }, // free | individual | student | duo | family
+    premiumStatus: { type: String, default: 'none' }, // none | active | canceling
+    stripeCustomerId: { type: String, default: '' },
+    stripeSubscriptionId: { type: String, default: '' },
+    premiumSince: { type: Date },
   },
   { timestamps: true }
 );

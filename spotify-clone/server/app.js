@@ -19,6 +19,8 @@ import {
   podcastsRouter,
 } from './routes/discover.routes.js';
 import aiRoutes from './routes/ai.routes.js';
+import billingRoutes from './routes/billing.routes.js';
+import { webhook as stripeWebhook } from './controllers/billing.controller.js';
 
 dotenv.config();
 
@@ -30,6 +32,14 @@ app.use(
     credentials: true,
   })
 );
+// Stripe webhook needs the raw body for signature verification, so it mounts
+// before the JSON parser (and before Clerk — Stripe calls it, not a user).
+app.post(
+  '/api/billing/webhook',
+  express.raw({ type: 'application/json' }),
+  (req, res, next) => connectDB().then(() => stripeWebhook(req, res)).catch(next)
+);
+
 app.use(express.json({ limit: '100kb' }));
 app.use(securityHeaders);
 app.use(rateLimit);
@@ -64,6 +74,7 @@ app.use('/api/artists', withDB, artistsRouter);
 app.use('/api/albums', withDB, albumsRouter);
 app.use('/api/podcasts', withDB, podcastsRouter);
 app.use('/api/ai', withDB, aiRoutes);
+app.use('/api/billing', withDB, billingRoutes);
 
 app.use('/api', (req, res) => {
   res.status(404).json({ error: 'Not found' });
