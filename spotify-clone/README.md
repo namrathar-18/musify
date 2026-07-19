@@ -190,6 +190,13 @@ All `/api/playlists/*` and `/api/users/me/*` endpoints require `Authorization: B
 | GET    | `/api/podcasts/top` | — | Top podcasts (Apple RSS) |
 | GET    | `/api/podcasts/search?q=` | — | Podcast search |
 | GET    | `/api/podcasts/:id` | — | Show + episodes (parsed from the public RSS feed) |
+| GET    | `/api/billing/plans` | — | Premium plan catalog |
+| GET    | `/api/billing/status` | ✓ | Current subscription status |
+| POST   | `/api/billing/checkout` | ✓ | Create a Stripe (test-mode) Checkout session |
+| POST   | `/api/billing/confirm` | ✓ | Verify a completed session server-side and activate Premium |
+| POST   | `/api/billing/cancel` | ✓ | Cancel at period end |
+| GET    | `/api/billing/history` | ✓ | Invoice history (hosted + PDF links) |
+| POST   | `/api/billing/webhook` | — | Signature-verified Stripe webhook (optional) |
 | GET    | `/api/ai/status` | — | Whether AI features are configured |
 | POST   | `/api/ai/chat` | ✓ | Music assistant chat → reply + playable tracks |
 | POST   | `/api/ai/playlist` | ✓ | Prompt → real playlist saved to your library |
@@ -288,6 +295,8 @@ The iTunes API is rate-limited (~20 calls/min), so `scripts/seed.js` throttles b
 | `CLERK_PUBLISHABLE_KEY` | ✅ | [clerk.com](https://clerk.com) → app → API Keys (`pk_...`) |
 | `CLERK_SECRET_KEY` | ✅ | Clerk → API Keys (`sk_...`) |
 | `GROQ_API_KEY` | ⬜ | [console.groq.com](https://console.groq.com) — enables the AI assistant, AI playlists, smart search & weekly report (free tier). Without it the app runs with AI features hidden. |
+| `STRIPE_SECRET_KEY` | ⬜ | [dashboard.stripe.com/test/apikeys](https://dashboard.stripe.com/test/apikeys) (`sk_test_...`) — enables Premium subscriptions in test mode (card `4242 4242 4242 4242`). |
+| `STRIPE_WEBHOOK_SECRET` | ⬜ | Optional: Stripe dashboard → Webhooks → endpoint `<your-app>/api/billing/webhook` (`whsec_...`). Payments verify server-side on return even without it. |
 | `CLIENT_ORIGIN` | ✅ | Deployed frontend URL (for CORS) |
 | `PORT` / `NODE_ENV` | ⬜ | Set automatically by the host |
 
@@ -340,6 +349,7 @@ The running app serves the catalog from MongoDB, so this seed is only needed onc
   | `VITE_CLERK_PUBLISHABLE_KEY` | same publishable key as above |
   | `VITE_API_BASE_URL` | `/api` |
   | `GROQ_API_KEY` | (optional) enables all AI features |
+  | `STRIPE_SECRET_KEY` | (optional) enables Premium subscriptions (test mode) |
   | `CLIENT_ORIGIN` | your Vercel URL, e.g. `https://musify.vercel.app` |
 
   Spotify keys are **not** required in Vercel (seeding already happened in step 3).

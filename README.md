@@ -15,6 +15,7 @@ An **AI-powered music discovery platform** on the MERN stack: a 700+ track catal
 - **Listening stats** — minutes, streaks, top artists/genres, hour-of-day chart, 12-week calendar heatmap
 - **Pro player** — queue, shuffle, repeat, playback speed, sleep timer, fullscreen view, keyboard shortcuts
 - **Catalog & charts** — 700+ cached tracks, trending, new releases, artist & album pages, Song of the Day
+- **Premium subscriptions** — Stripe (test-mode) checkout with 4 plans, server-verified payments, cancel-at-period-end, billing history with invoice PDFs
 - **Secure auth** with Clerk (Google sign-in; JWT-verified on every protected route) + rate limiting & security headers
 - **25+ REST endpoints**, response-time instrumentation, API test suite (Vitest + Supertest), GitHub Actions CI
 - **Performance-tuned:** MongoDB write-through cache, TTL chart caching, batch hydration, `.lean()` reads, code-split pages
