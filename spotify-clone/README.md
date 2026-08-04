@@ -1,6 +1,6 @@
 # 🎵 Musify — AI-Powered Music Discovery (MERN + Clerk + Groq)
 
-A full-stack, AI-powered music platform built with React, Express, MongoDB, Clerk auth, and Groq (Llama 3.3 70B). Stream 30-second previews from a 700+ track catalog, chat with an **AI assistant that answers with playable songs**, generate playlists from natural-language prompts, stream **full podcast episodes**, explore artist/album pages and charts, and track your listening with a stats dashboard (streaks, heatmaps, AI weekly report).
+A full-stack, AI-powered music platform built with React, Express, MongoDB, Clerk auth, and Groq (Llama 3.3 70B). Stream 30-second previews from a 700+ track catalog, chat with an **AI assistant that answers with playable songs**, generate playlists from natural-language prompts, read **AI song stories**, play **Guess the Song** for XP and badges, share a **public profile**, focus with a **Pomodoro + soundscapes** mode, stream **full podcast episodes**, and track everything in a stats dashboard (streaks, heatmaps, AI weekly report).
 
 <p align="center">
   <a href="#-cloud-deployment--one-vercel-project-client--api"><b>🚀 Deploy Guide</b></a> &nbsp;•&nbsp;
@@ -197,6 +197,15 @@ All `/api/playlists/*` and `/api/users/me/*` endpoints require `Authorization: B
 | POST   | `/api/billing/cancel` | ✓ | Cancel at period end |
 | GET    | `/api/billing/history` | ✓ | Invoice history (hosted + PDF links) |
 | POST   | `/api/billing/webhook` | — | Signature-verified Stripe webhook (optional) |
+| GET    | `/api/users/me/progress` | ✓ | Level, XP, badge catalog with earned state |
+| PUT    | `/api/users/me/profile` | ✓ | Username, bio, visibility, favourite genres |
+| GET    | `/api/profiles/:username` | — | Public profile (level, badges, top artists, public playlists) |
+| GET    | `/api/shared/playlist/:id` | — | Read-only view of a shared playlist |
+| GET    | `/api/quiz/new` | ✓ | Deal a quiz round (answers never leave the server) |
+| POST   | `/api/quiz/submit` | ✓ | Grade a round, award XP, update high score |
+| GET    | `/api/quiz/leaderboard` | — | Top players |
+| POST   | `/api/ai/song-story` | ✓ | AI background, listen-for note, moods, similar tracks |
+| GET    | `/api/ai/daily-mix` | ✓ | Personalized daily mix (cached per user per day) |
 | GET    | `/api/ai/status` | — | Whether AI features are configured |
 | POST   | `/api/ai/chat` | ✓ | Music assistant chat → reply + playable tracks |
 | POST   | `/api/ai/playlist` | ✓ | Prompt → real playlist saved to your library |

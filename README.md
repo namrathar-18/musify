@@ -11,6 +11,12 @@ An **AI-powered music discovery platform** on the MERN stack: a 700+ track catal
 - **AI music assistant** (Groq · Llama 3.3 70B): multi-turn chat that recommends real, instantly playable tracks
 - **AI playlist generator** — describe a vibe, get a real playlist saved to your library
 - **AI natural-language search** ("energetic gym songs like Eye of the Tiger") + AI weekly listening report
+- **AI Song Stories** — the background, what to listen for, mood tags and similar tracks for any song
+- **AI Daily Mix** — a personalized set rebuilt each day from your listening history
+- **Guess the Song** — timed audio quiz with anti-cheat server-side scoring and a global leaderboard
+- **Levels, XP & 15 badges** — earn progress for listening, curating and playing; streaks included
+- **Public profiles & sharing** — a shareable `/u/username` page and one-click public playlist links
+- **Focus Mode** — Pomodoro timer with work/break cycles and six curated soundscapes
 - **Podcasts** — browse/search top shows and stream **full episodes** via public RSS feeds
 - **Listening stats** — minutes, streaks, top artists/genres, hour-of-day chart, 12-week calendar heatmap
 - **Pro player** — queue, shuffle, repeat, playback speed, sleep timer, fullscreen view, keyboard shortcuts
