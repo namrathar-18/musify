@@ -14,6 +14,7 @@ const playlistSchema = new mongoose.Schema(
     name: { type: String, required: true },
     description: { type: String, default: '' },
     tracks: { type: [playlistTrackSchema], default: [] },
+    isPublic: { type: Boolean, default: false }, // shareable via /shared/:id
   },
   { timestamps: true }
 );

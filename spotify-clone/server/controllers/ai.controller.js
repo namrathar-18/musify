@@ -1,10 +1,13 @@
 import Playlist from '../models/Playlist.js';
 import Track from '../models/Track.js';
 import Play from '../models/Play.js';
+import User from '../models/User.js';
 import { getUserId } from '../middleware/auth.middleware.js';
 import { asyncHandler } from '../middleware/error.middleware.js';
 import { chatJSON, aiEnabled } from '../lib/groq.js';
 import { searchCatalog } from '../lib/itunes.js';
+import { awardXp, XP_REWARDS } from '../lib/gamification.js';
+import { cached } from '../lib/cache.js';
 
 const cacheTracks = (tracks) => {
   if (!tracks?.length) return;
@@ -42,7 +45,9 @@ const gatherTracks = async (queries, perQuery = 3, cap = 30) => {
       // "CAN'T STOP THE FEELING!" and "Can't Stop the Feeling! (Film Version)"
       // collapse to one key.
       const slug = (s) => s.toLowerCase().replace(/\s*[([].*/, '').replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
-      const songKey = `${slug(t.title)}|${slug(t.artist.split(',')[0])}`;
+      // Key on the lead artist's first token so "Miles Davis" and "Miles Davis
+      // Quintet" collapse — otherwise live/alt cuts sneak past as new songs.
+      const songKey = `${slug(t.title)}|${slug(t.artist.split(/[,&]/)[0]).split(' ')[0]}`;
       if (byId.has(t.spotifyId) || bySong.has(songKey)) continue;
       if (!wantVariants && VARIANT_RE.test(t.title)) continue;
       byId.add(t.spotifyId);
@@ -131,7 +136,125 @@ export const generatePlaylist = asyncHandler(async (req, res) => {
     tracks: tracks.map((t) => ({ spotifyTrackId: t.spotifyId, addedAt: new Date() })),
   });
 
+  awardXp(userId, XP_REWARDS.aiPlaylist).catch(() => {});
+
   res.status(201).json({ playlist, tracks });
+});
+
+// POST /api/ai/song-story  { spotifyId }
+// The story behind a track: context, meaning, what to listen for — plus
+// similar songs the user can play immediately.
+export const songStory = asyncHandler(async (req, res) => {
+  getUserId(req);
+  const spotifyId = String(req.body.spotifyId || '');
+  const track = await Track.findOne({ spotifyId }).lean();
+  if (!track) {
+    const err = new Error('Track not found');
+    err.status = 404;
+    throw err;
+  }
+
+  const data = await chatJSON(
+    [
+      {
+        role: 'system',
+        content:
+          'You are a music journalist. Given a song, respond with JSON: ' +
+          '{"story": string (2-4 sentences on the song and its artist — era, style, why it matters; if unfamiliar, describe the genre and artist honestly rather than inventing facts), ' +
+          '"listenFor": string (one sentence on a musical detail to notice), ' +
+          '"mood": string[] (2-4 one-word moods), ' +
+          '"similar": string[] (3-4 searches as "song title artist" for genuinely similar tracks)}. ' +
+          'Never invent specific chart positions, awards, or dates you are unsure of.',
+      },
+      {
+        role: 'user',
+        content: `Song: "${track.title}" by ${track.artist}${
+          track.album ? ` (album: ${track.album}` : ''
+        }${track.genre ? `, genre: ${track.genre}` : ''}${track.album ? ')' : ''}${
+          track.releaseDate ? `, released ${track.releaseDate}` : ''
+        }`,
+      },
+    ],
+    { maxTokens: 600 }
+  );
+
+  const similar = await gatherTracks(data.similar, 1, 6);
+  cacheTracks(similar);
+
+  res.json({
+    track: { spotifyId: track.spotifyId, title: track.title, artist: track.artist, albumArt: track.albumArt },
+    story: String(data.story || ''),
+    listenFor: String(data.listenFor || ''),
+    mood: Array.isArray(data.mood) ? data.mood.slice(0, 4).map(String) : [],
+    similar: similar.filter((t) => t.spotifyId !== spotifyId),
+  });
+});
+
+// GET /api/ai/daily-mix — a personalized daily set built from listening history.
+// Deterministic per user per day, and cached so repeat visits are instant.
+export const dailyMix = asyncHandler(async (req, res) => {
+  const userId = getUserId(req);
+  const day = new Date().toISOString().slice(0, 10);
+
+  const payload = await cached(`daily-mix-${userId}-${day}`, 6 * 3600 * 1000, async () => {
+    const since = new Date(Date.now() - 30 * 86400000);
+    const [topArtists, topGenres] = await Promise.all([
+      Play.aggregate([
+        { $match: { userId, playedAt: { $gte: since }, artist: { $ne: '' } } },
+        { $group: { _id: '$artist', plays: { $sum: 1 } } },
+        { $sort: { plays: -1 } },
+        { $limit: 5 },
+      ]),
+      Play.aggregate([
+        { $match: { userId, playedAt: { $gte: since }, genre: { $ne: '' } } },
+        { $group: { _id: '$genre', plays: { $sum: 1 } } },
+        { $sort: { plays: -1 } },
+        { $limit: 3 },
+      ]),
+    ]);
+
+    // Cold start: no history yet, so seed the mix from the user's picked genres
+    const user = await User.findOne({ clerkUserId: userId }, { favoriteGenres: 1 }).lean();
+    const seedArtists = topArtists.map((a) => a._id);
+    const seedGenres = topGenres.map((g) => g._id);
+    const fallback = (user?.favoriteGenres || []).slice(0, 3);
+
+    if (!seedArtists.length && !seedGenres.length && !fallback.length) {
+      return { title: 'Daily Mix', subtitle: '', tracks: [], needsHistory: true };
+    }
+
+    const data = await chatJSON(
+      [
+        {
+          role: 'system',
+          content:
+            'You build a daily personalized music mix. Given a listener profile, respond with JSON: ' +
+            '{"title": string (<=30 chars, e.g. "Indie Morning Mix"), "subtitle": string (<=70 chars, why these picks), ' +
+            '"queries": string[] (12 searches as "song title artist" — mix familiar favorites with fresh discoveries in adjacent styles)}.',
+        },
+        {
+          role: 'user',
+          content: JSON.stringify({
+            topArtists: seedArtists,
+            topGenres: seedGenres.length ? seedGenres : fallback,
+            timeOfDay: new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening',
+          }),
+        },
+      ],
+      { maxTokens: 800 }
+    );
+
+    const tracks = await gatherTracks(data.queries, 2, 20);
+    cacheTracks(tracks);
+    return {
+      title: String(data.title || 'Daily Mix'),
+      subtitle: String(data.subtitle || ''),
+      tracks,
+      needsHistory: false,
+    };
+  });
+
+  res.json(payload);
 });
 
 // POST /api/ai/search   body: { query }

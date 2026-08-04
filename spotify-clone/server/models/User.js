@@ -21,6 +21,19 @@ const userSchema = new mongoose.Schema(
     stripeCustomerId: { type: String, default: '' },
     stripeSubscriptionId: { type: String, default: '' },
     premiumSince: { type: Date },
+
+    // Gamification
+    xp: { type: Number, default: 0 },
+    badges: [{ type: String }], // badge ids from lib/gamification.js
+    quizHighScore: { type: Number, default: 0 },
+    quizGamesPlayed: { type: Number, default: 0 },
+
+    // Public profile / onboarding
+    username: { type: String, unique: true, sparse: true, index: true },
+    bio: { type: String, default: '' },
+    isPublic: { type: Boolean, default: true },
+    favoriteGenres: [{ type: String }],
+    onboarded: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

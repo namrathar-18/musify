@@ -87,6 +87,27 @@ export const searchPodcasts = (q) =>
   api.get('/podcasts/search', { params: { q } }).then((r) => r.data);
 export const fetchPodcast = (id) => api.get(`/podcasts/${id}`).then((r) => r.data);
 
+// Gamification & profile
+export const fetchProgress = () => api.get('/users/me/progress').then((r) => r.data);
+export const updateProfile = (patch) => api.put('/users/me/profile', patch).then((r) => r.data);
+export const fetchPublicProfile = (username) =>
+  api.get(`/profiles/${encodeURIComponent(username)}`).then((r) => r.data);
+export const fetchSharedPlaylist = (id) =>
+  api.get(`/shared/playlist/${id}`).then((r) => r.data);
+export const setPlaylistVisibility = (id, isPublic) =>
+  api.put(`/playlists/${id}`, { isPublic }).then((r) => r.data);
+
+// Quiz
+export const fetchNewQuiz = () => api.get('/quiz/new').then((r) => r.data);
+export const submitQuiz = (quizId, picks) =>
+  api.post('/quiz/submit', { quizId, picks }).then((r) => r.data);
+export const fetchLeaderboard = () => api.get('/quiz/leaderboard').then((r) => r.data);
+
+// AI extras
+export const fetchSongStory = (spotifyId) =>
+  api.post('/ai/song-story', { spotifyId }).then((r) => r.data);
+export const fetchDailyMix = () => api.get('/ai/daily-mix').then((r) => r.data);
+
 // Billing (Stripe test mode)
 export const fetchPlans = () => api.get('/billing/plans').then((r) => r.data);
 export const fetchBillingStatus = () => api.get('/billing/status').then((r) => r.data);

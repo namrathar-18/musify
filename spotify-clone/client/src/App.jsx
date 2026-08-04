@@ -11,6 +11,8 @@ import MobileNav from './components/MobileNav';
 import Player from './components/Player';
 import QueuePanel from './components/QueuePanel';
 import FullscreenPlayer from './components/FullscreenPlayer';
+import SongStory from './components/SongStory';
+import Onboarding from './components/Onboarding';
 import Toaster from './components/Toaster';
 import { Loader2 } from 'lucide-react';
 
@@ -27,6 +29,11 @@ const PodcastShow = lazy(() => import('./pages/PodcastShow.jsx'));
 const Stats = lazy(() => import('./pages/Stats.jsx'));
 const Assistant = lazy(() => import('./pages/Assistant.jsx'));
 const Premium = lazy(() => import('./pages/Premium.jsx'));
+const Quiz = lazy(() => import('./pages/Quiz.jsx'));
+const Focus = lazy(() => import('./pages/Focus.jsx'));
+const MyProfile = lazy(() => import('./pages/MyProfile.jsx'));
+const PublicProfile = lazy(() => import('./pages/PublicProfile.jsx'));
+const SharedPlaylist = lazy(() => import('./pages/SharedPlaylist.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
 
 const PageFallback = () => (
@@ -94,6 +101,18 @@ export default function App() {
               <Route path="/artist/:id" element={<Artist />} />
               <Route path="/album/:id" element={<Album />} />
               <Route path="/premium" element={<Premium />} />
+              <Route path="/quiz" element={<Quiz />} />
+              <Route path="/focus" element={<Focus />} />
+              <Route path="/u/:username" element={<PublicProfile />} />
+              <Route path="/shared/:id" element={<SharedPlaylist />} />
+              <Route
+                path="/profile"
+                element={
+                  <Protected>
+                    <MyProfile />
+                  </Protected>
+                }
+              />
               <Route
                 path="/library"
                 element={
@@ -143,6 +162,8 @@ export default function App() {
       <MobileNav />
       <QueuePanel />
       <FullscreenPlayer />
+      <SongStory />
+      <Onboarding />
       <Toaster />
     </div>
   );

@@ -1,4 +1,4 @@
-import { Play, Pause, Heart, Plus, Trash2, ListPlus } from 'lucide-react';
+import { Play, Pause, Heart, Plus, Trash2, ListPlus, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useLibraryStore } from '../store/useLibraryStore';
@@ -29,6 +29,7 @@ export default function TrackRow({
   const playQueue = usePlayerStore((s) => s.playQueue);
   const togglePlay = usePlayerStore((s) => s.togglePlay);
   const addToQueue = usePlayerStore((s) => s.addToQueue);
+  const openStory = usePlayerStore((s) => s.openStory);
 
   const playlists = useLibraryStore((s) => s.playlists);
   const addToPlaylist = useLibraryStore((s) => s.addTrackToPlaylist);
@@ -128,6 +129,16 @@ export default function TrackRow({
         >
           <ListPlus size={16} />
         </button>
+        {isSignedIn && !isEpisode && (
+          <button
+            onClick={() => openStory(track)}
+            className="p-1 text-muted hover:text-accent opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-all"
+            aria-label="Song story"
+            title="AI song story"
+          >
+            <Sparkles size={16} />
+          </button>
+        )}
         {isSignedIn && !isEpisode && playlists.length > 0 && (
           <div className="relative">
             <button

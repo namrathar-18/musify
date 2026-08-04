@@ -3,6 +3,7 @@ import Track from '../models/Track.js';
 import { getUserId } from '../middleware/auth.middleware.js';
 import { asyncHandler } from '../middleware/error.middleware.js';
 import { getTracksByIds } from '../lib/itunes.js';
+import { awardXp, XP_REWARDS } from '../lib/gamification.js';
 
 // GET /api/playlists
 export const listPlaylists = asyncHandler(async (req, res) => {
@@ -75,6 +76,8 @@ export const createPlaylist = asyncHandler(async (req, res) => {
     tracks: [],
   });
 
+  awardXp(userId, XP_REWARDS.playlistCreated).catch(() => {});
+
   res.status(201).json(playlist);
 });
 
@@ -87,6 +90,7 @@ export const updatePlaylist = asyncHandler(async (req, res) => {
   const update = {};
   if (name !== undefined) update.name = String(name).trim().slice(0, 100);
   if (description !== undefined) update.description = String(description).trim().slice(0, 300);
+  if (req.body.isPublic !== undefined) update.isPublic = Boolean(req.body.isPublic);
 
   const playlist = await Playlist.findOneAndUpdate(
     { _id: id, userId },

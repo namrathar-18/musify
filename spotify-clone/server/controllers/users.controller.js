@@ -4,6 +4,7 @@ import Play from '../models/Play.js';
 import { getUserId } from '../middleware/auth.middleware.js';
 import { asyncHandler } from '../middleware/error.middleware.js';
 import { getTracksByIds } from '../lib/itunes.js';
+import { awardXp, buildStats, levelFromXp, BADGES, XP_REWARDS } from '../lib/gamification.js';
 import { clerkClient } from '@clerk/express';
 
 // Lazy upsert of the local user record matching the Clerk user
@@ -92,6 +93,7 @@ export const toggleLike = asyncHandler(async (req, res) => {
     liked = true;
   }
   await user.save();
+  if (liked) awardXp(userId, XP_REWARDS.like).catch(() => {});
   res.json({ liked, likedSongs: user.likedSongs });
 });
 
@@ -145,7 +147,73 @@ export const recordPlay = asyncHandler(async (req, res) => {
     )
     .catch((err) => console.warn('Play log failed:', err.message));
 
+  awardXp(userId, XP_REWARDS.play).catch(() => {});
+
   res.json({ success: true });
+});
+
+// GET /api/users/me/progress — level, XP, badges (earned + locked)
+export const getProgress = asyncHandler(async (req, res) => {
+  const userId = getUserId(req);
+  const user = await ensureUser(userId);
+  const stats = await buildStats(userId);
+  const owned = new Set(user.badges || []);
+
+  res.json({
+    ...levelFromXp(user.xp || 0),
+    stats,
+    badges: BADGES.map((b) => ({
+      id: b.id,
+      name: b.name,
+      description: b.description,
+      icon: b.icon,
+      earned: owned.has(b.id),
+    })),
+  });
+});
+
+// PUT /api/users/me/profile — username, bio, visibility, favorite genres
+export const updateProfile = asyncHandler(async (req, res) => {
+  const userId = getUserId(req);
+  await ensureUser(userId);
+  const { username, bio, isPublic, favoriteGenres, onboarded } = req.body;
+  const update = {};
+
+  if (username !== undefined) {
+    const clean = String(username).trim().toLowerCase();
+    if (!/^[a-z0-9_]{3,20}$/.test(clean)) {
+      const err = new Error('Username must be 3-20 characters: letters, numbers, underscore');
+      err.status = 400;
+      throw err;
+    }
+    const taken = await User.findOne({ username: clean, clerkUserId: { $ne: userId } }).lean();
+    if (taken) {
+      const err = new Error('That username is already taken');
+      err.status = 409;
+      throw err;
+    }
+    update.username = clean;
+  }
+  if (bio !== undefined) update.bio = String(bio).trim().slice(0, 200);
+  if (isPublic !== undefined) update.isPublic = Boolean(isPublic);
+  if (Array.isArray(favoriteGenres)) {
+    update.favoriteGenres = favoriteGenres.slice(0, 8).map((g) => String(g).slice(0, 40));
+  }
+  if (onboarded !== undefined) update.onboarded = Boolean(onboarded);
+
+  const user = await User.findOneAndUpdate(
+    { clerkUserId: userId },
+    { $set: update },
+    { new: true }
+  ).lean();
+
+  res.json({
+    username: user.username || null,
+    bio: user.bio,
+    isPublic: user.isPublic,
+    favoriteGenres: user.favoriteGenres || [],
+    onboarded: user.onboarded,
+  });
 });
 
 // GET /api/users/me  (profile + summary)
@@ -158,5 +226,14 @@ export const getMe = asyncHandler(async (req, res) => {
     displayName: user.displayName,
     likedSongCount: user.likedSongs.length,
     likedSongIds: user.likedSongs,
+    username: user.username || null,
+    bio: user.bio || '',
+    isPublic: user.isPublic !== false,
+    favoriteGenres: user.favoriteGenres || [],
+    onboarded: !!user.onboarded,
+    level: levelFromXp(user.xp || 0).level,
+    xp: user.xp || 0,
+    premiumPlan: user.premiumPlan || 'free',
+    premiumStatus: user.premiumStatus || 'none',
   });
 });

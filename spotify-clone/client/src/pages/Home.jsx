@@ -10,6 +10,8 @@ import {
   fetchGenreRow,
   fetchTopPodcasts,
   fetchRecent,
+  fetchDailyMix,
+  fetchAiStatus,
 } from '../lib/api';
 import { usePlayerStore } from '../store/usePlayerStore';
 import TrackCard from '../components/TrackCard';
@@ -48,14 +50,20 @@ export default function Home() {
   const playQueue = usePlayerStore((s) => s.playQueue);
   const [sotd, setSotd] = useState(null);
   const [recent, setRecent] = useState(null);
+  const [dailyMix, setDailyMix] = useState(null);
 
   useEffect(() => {
     fetchSongOfTheDay().then((r) => setSotd(r.track)).catch(() => {});
   }, []);
 
   useEffect(() => {
-    if (!isSignedIn) { setRecent(null); return; }
+    if (!isSignedIn) { setRecent(null); setDailyMix(null); return; }
     fetchRecent().then((r) => setRecent(r.items || [])).catch(() => setRecent([]));
+    // Personalized AI mix — only when AI is configured, and it's cached daily
+    fetchAiStatus()
+      .then(({ enabled }) => (enabled ? fetchDailyMix() : null))
+      .then((mix) => mix && !mix.needsHistory && mix.tracks?.length && setDailyMix(mix))
+      .catch(() => {});
   }, [isSignedIn]);
 
   return (
@@ -94,6 +102,34 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* AI daily mix */}
+      {dailyMix && (
+        <Section
+          title={
+            <span className="flex items-center gap-2">
+              <Sparkles size={18} className="text-accent" /> {dailyMix.title}
+            </span>
+          }
+          action={
+            <button
+              onClick={() => playQueue(dailyMix.tracks, 0)}
+              className="text-sm bg-accent-deep hover:bg-accent text-white rounded-full px-4 py-1.5 font-semibold transition-colors"
+            >
+              Play mix
+            </button>
+          }
+        >
+          {dailyMix.subtitle && (
+            <p className="text-muted text-sm -mt-1 mb-3">{dailyMix.subtitle}</p>
+          )}
+          <CardRow>
+            {dailyMix.tracks.map((t, i) => (
+              <TrackCard key={t.spotifyId} track={t} queue={dailyMix.tracks} index={i} />
+            ))}
+          </CardRow>
+        </Section>
+      )}
 
       {/* Continue listening */}
       {isSignedIn && recent && recent.length > 0 && (

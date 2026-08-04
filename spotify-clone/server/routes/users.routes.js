@@ -6,6 +6,8 @@ import {
   toggleLike,
   getRecent,
   recordPlay,
+  getProgress,
+  updateProfile,
 } from '../controllers/users.controller.js';
 import { getStats } from '../controllers/stats.controller.js';
 
@@ -15,6 +17,8 @@ router.use(requireAuth);
 
 router.get('/me', getMe);
 router.get('/me/stats', getStats);
+router.get('/me/progress', getProgress);
+router.put('/me/profile', updateProfile);
 router.get('/me/liked', getLikedSongs);
 router.post('/me/liked/:trackId', toggleLike);
 router.get('/me/recent', getRecent);

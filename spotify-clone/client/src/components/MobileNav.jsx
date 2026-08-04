@@ -1,11 +1,11 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Search, Library, Mic2, Sparkles } from 'lucide-react';
+import { Home, Search, Library, Gamepad2, Sparkles } from 'lucide-react';
 
 const items = [
   { to: '/', icon: Home, label: 'Home' },
   { to: '/search', icon: Search, label: 'Search' },
   { to: '/assistant', icon: Sparkles, label: 'AI' },
-  { to: '/podcasts', icon: Mic2, label: 'Podcasts' },
+  { to: '/quiz', icon: Gamepad2, label: 'Quiz' },
   { to: '/library', icon: Library, label: 'Library' },
 ];
 

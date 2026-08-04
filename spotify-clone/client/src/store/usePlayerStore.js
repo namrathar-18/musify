@@ -39,10 +39,13 @@ export const usePlayerStore = create((set, get) => ({
   sleepAt: null, // epoch ms when playback should stop
   queueOpen: false,
   fullscreen: false,
+  storyTrack: null, // track whose AI story modal is open
 
   setAuthed: (v) => set({ authed: v }),
   setQueueOpen: (v) => set({ queueOpen: v }),
   setFullscreen: (v) => set({ fullscreen: v }),
+  openStory: (track) => set({ storyTrack: track }),
+  closeStory: () => set({ storyTrack: null }),
 
   initAudio: () => {
     const a = getAudio();
@@ -197,6 +200,12 @@ export const usePlayerStore = create((set, get) => ({
     const target = get()._neighbor(-1);
     if (target !== -1) get()._playAt(target);
     else a.currentTime = 0;
+  },
+
+  // Quiz/Focus modes run their own audio; silence the main player first so
+  // two sources never overlap.
+  pauseForGame: () => {
+    getAudio().pause();
   },
 
   togglePlay: async () => {

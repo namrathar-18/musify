@@ -6,6 +6,8 @@ import {
   generatePlaylist,
   smartSearch,
   weeklyReport,
+  songStory,
+  dailyMix,
 } from '../controllers/ai.controller.js';
 
 // Simple per-user sliding-window rate limit for LLM-backed endpoints.
@@ -36,5 +38,7 @@ router.post('/chat', aiRateLimit, chat);
 router.post('/playlist', aiRateLimit, generatePlaylist);
 router.post('/search', aiRateLimit, smartSearch);
 router.get('/weekly-report', aiRateLimit, weeklyReport);
+router.post('/song-story', aiRateLimit, songStory);
+router.get('/daily-mix', aiRateLimit, dailyMix);
 
 export default router;

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchPlaylist } from '../lib/api';
+import { fetchPlaylist, setPlaylistVisibility } from '../lib/api';
 import { useLibraryStore } from '../store/useLibraryStore';
 import { usePlayerStore } from '../store/usePlayerStore';
+import { toast } from '../store/useToastStore';
 import TrackRow from '../components/TrackRow';
-import { Loader2, Play, Pencil, Trash2 } from 'lucide-react';
+import { Loader2, Play, Pencil, Trash2, Share2, Globe, Lock } from 'lucide-react';
 
 export default function PlaylistPage() {
   const { id } = useParams();
@@ -112,6 +113,35 @@ export default function PlaylistPage() {
           className="bg-accent-deep hover:bg-accent text-white rounded-full w-14 h-14 flex items-center justify-center disabled:opacity-40 hover:scale-105 transition-all"
         >
           <Play size={24} className="ml-1 fill-white" />
+        </button>
+
+        {/* Share: flipping a playlist public gives it a link anyone can open */}
+        <button
+          onClick={async () => {
+            const next = !playlist.isPublic;
+            try {
+              await setPlaylistVisibility(id, next);
+              setPlaylist((p) => ({ ...p, isPublic: next }));
+              if (next) {
+                const url = `${window.location.origin}/shared/${id}`;
+                navigator.clipboard?.writeText(url);
+                toast('Public link copied to clipboard', 'success');
+              } else {
+                toast('Playlist is private again');
+              }
+            } catch {
+              toast('Could not update sharing', 'error');
+            }
+          }}
+          className={`border rounded-full px-4 py-2 text-sm inline-flex items-center gap-2 transition-colors ${
+            playlist.isPublic
+              ? 'border-accent text-accent'
+              : 'border-white/20 text-muted hover:text-white hover:border-white'
+          }`}
+          title={playlist.isPublic ? 'Public — click to make private' : 'Share this playlist'}
+        >
+          {playlist.isPublic ? <Globe size={15} /> : <Share2 size={15} />}
+          {playlist.isPublic ? 'Public' : 'Share'}
         </button>
         <button
           onClick={() => setEditing(true)}

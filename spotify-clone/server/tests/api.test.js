@@ -92,6 +92,18 @@ describe('public endpoints', () => {
     expect(res.body.plans.map((p) => p.id)).toContain('individual');
   });
 
+  it('GET /api/quiz/leaderboard is public and returns a list', async () => {
+    const res = await request(app).get('/api/quiz/leaderboard');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.items)).toBe(true);
+  });
+
+  it('GET /api/profiles/:username 404s for an unknown handle', async () => {
+    const res = await request(app).get('/api/profiles/definitely-not-a-user');
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBeDefined();
+  });
+
   it('sets baseline security headers', async () => {
     const res = await request(app).get('/api/health');
     expect(res.headers['x-content-type-options']).toBe('nosniff');
@@ -113,6 +125,12 @@ describe('auth gating', () => {
     ['post', '/api/billing/checkout'],
     ['post', '/api/billing/cancel'],
     ['get', '/api/billing/history'],
+    ['get', '/api/users/me/progress'],
+    ['put', '/api/users/me/profile'],
+    ['get', '/api/quiz/new'],
+    ['post', '/api/quiz/submit'],
+    ['post', '/api/ai/song-story'],
+    ['get', '/api/ai/daily-mix'],
   ];
 
   it.each(protectedRoutes)('%s %s returns JSON 401 when signed out', async (method, path) => {
