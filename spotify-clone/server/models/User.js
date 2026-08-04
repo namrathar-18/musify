@@ -28,6 +28,9 @@ const userSchema = new mongoose.Schema(
     quizHighScore: { type: Number, default: 0 },
     quizGamesPlayed: { type: Number, default: 0 },
 
+    // Social graph — clerkUserIds this account follows
+    following: [{ type: String, index: true }],
+
     // Public profile / onboarding
     username: { type: String, unique: true, sparse: true, index: true },
     bio: { type: String, default: '' },

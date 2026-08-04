@@ -131,6 +131,10 @@ describe('auth gating', () => {
     ['post', '/api/quiz/submit'],
     ['post', '/api/ai/song-story'],
     ['get', '/api/ai/daily-mix'],
+    ['get', '/api/social/feed'],
+    ['get', '/api/social/following'],
+    ['post', '/api/social/follow/someone'],
+    ['get', '/api/users/me/time-capsule'],
   ];
 
   it.each(protectedRoutes)('%s %s returns JSON 401 when signed out', async (method, path) => {

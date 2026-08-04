@@ -10,6 +10,7 @@ import {
   updateProfile,
 } from '../controllers/users.controller.js';
 import { getStats } from '../controllers/stats.controller.js';
+import { timeCapsule } from '../controllers/feed.controller.js';
 
 const router = Router();
 
@@ -18,6 +19,7 @@ router.use(requireAuth);
 router.get('/me', getMe);
 router.get('/me/stats', getStats);
 router.get('/me/progress', getProgress);
+router.get('/me/time-capsule', timeCapsule);
 router.put('/me/profile', updateProfile);
 router.get('/me/liked', getLikedSongs);
 router.post('/me/liked/:trackId', toggleLike);

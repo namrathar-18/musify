@@ -22,6 +22,7 @@ import aiRoutes from './routes/ai.routes.js';
 import billingRoutes from './routes/billing.routes.js';
 import quizRoutes from './routes/quiz.routes.js';
 import { profilesRouter, sharedRouter } from './routes/social.routes.js';
+import feedRoutes from './routes/feed.routes.js';
 import { webhook as stripeWebhook } from './controllers/billing.controller.js';
 
 dotenv.config();
@@ -78,6 +79,7 @@ app.use('/api/podcasts', withDB, podcastsRouter);
 app.use('/api/ai', withDB, aiRoutes);
 app.use('/api/billing', withDB, billingRoutes);
 app.use('/api/quiz', withDB, quizRoutes);
+app.use('/api/social', withDB, feedRoutes);
 app.use('/api/profiles', withDB, profilesRouter);
 app.use('/api/shared', withDB, sharedRouter);
 

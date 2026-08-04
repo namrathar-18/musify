@@ -97,6 +97,15 @@ export const fetchSharedPlaylist = (id) =>
 export const setPlaylistVisibility = (id, isPublic) =>
   api.put(`/playlists/${id}`, { isPublic }).then((r) => r.data);
 
+// Social graph
+export const fetchFeed = () => api.get('/social/feed').then((r) => r.data);
+export const fetchFollowing = () => api.get('/social/following').then((r) => r.data);
+export const followUser = (username) =>
+  api.post(`/social/follow/${encodeURIComponent(username)}`).then((r) => r.data);
+export const unfollowUser = (username) =>
+  api.delete(`/social/follow/${encodeURIComponent(username)}`).then((r) => r.data);
+export const fetchTimeCapsule = () => api.get('/users/me/time-capsule').then((r) => r.data);
+
 // Quiz
 export const fetchNewQuiz = () => api.get('/quiz/new').then((r) => r.data);
 export const submitQuiz = (quizId, picks) =>

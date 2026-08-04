@@ -1,14 +1,36 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { UserRound, Crown, Music2 } from 'lucide-react';
-import { fetchPublicProfile } from '../lib/api';
+import { useUser } from '@clerk/clerk-react';
+import { UserRound, Crown, Music2, UserPlus, UserCheck } from 'lucide-react';
+import { fetchPublicProfile, followUser, unfollowUser } from '../lib/api';
+import { toast } from '../store/useToastStore';
 import { EmptyState, Section, SkeletonRows } from '../components/ui';
 import LevelRing from '../components/LevelRing';
 
 export default function PublicProfile() {
   const { username } = useParams();
+  const { isSignedIn } = useUser();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  const toggleFollow = async () => {
+    setBusy(true);
+    try {
+      const next = !data.isFollowing;
+      await (next ? followUser(username) : unfollowUser(username));
+      setData((d) => ({
+        ...d,
+        isFollowing: next,
+        followers: d.followers + (next ? 1 : -1),
+      }));
+      toast(next ? `Following ${data.displayName}` : `Unfollowed ${data.displayName}`, 'success');
+    } catch (err) {
+      toast(err.response?.data?.error || 'Could not update follow', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   useEffect(() => {
     let on = true;
@@ -33,10 +55,30 @@ export default function PublicProfile() {
             {data.displayName}
           </h1>
           <div className="text-muted text-sm">@{data.username}</div>
-          {data.isPremium && (
-            <span className="inline-flex items-center gap-1 mt-2 text-xs bg-amber-400/15 text-amber-400 rounded-full px-3 py-1">
-              <Crown size={12} /> Premium
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
+            {data.isPremium && (
+              <span className="inline-flex items-center gap-1 text-xs bg-amber-400/15 text-amber-400 rounded-full px-3 py-1">
+                <Crown size={12} /> Premium
+              </span>
+            )}
+            <span className="text-muted text-sm">
+              <b className="text-white">{data.followers}</b> followers ·{' '}
+              <b className="text-white">{data.followingCount}</b> following
             </span>
+          </div>
+          {isSignedIn && !data.isSelf && (
+            <button
+              onClick={toggleFollow}
+              disabled={busy}
+              className={`mt-3 rounded-full px-5 py-2 text-sm font-semibold inline-flex items-center gap-2 transition-colors disabled:opacity-50 ${
+                data.isFollowing
+                  ? 'border border-white/20 text-muted hover:text-white hover:border-white'
+                  : 'bg-accent-deep hover:bg-accent text-white'
+              }`}
+            >
+              {data.isFollowing ? <UserCheck size={15} /> : <UserPlus size={15} />}
+              {data.isFollowing ? 'Following' : 'Follow'}
+            </button>
           )}
         </div>
       </div>

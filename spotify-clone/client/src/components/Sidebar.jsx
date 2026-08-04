@@ -13,6 +13,7 @@ import {
   Gamepad2,
   Timer,
   UserRound,
+  Users,
 } from 'lucide-react';
 import { useUser, useClerk, SignInButton } from '@clerk/clerk-react';
 import { useLibraryStore } from '../store/useLibraryStore';
@@ -69,6 +70,7 @@ export default function Sidebar() {
         <NavEntry to="/quiz" icon={Gamepad2} label="Guess the Song" />
         <NavEntry to="/focus" icon={Timer} label="Focus Mode" />
         <NavEntry to="/stats" icon={BarChart3} label="Stats" />
+        {isSignedIn && <NavEntry to="/feed" icon={Users} label="Friend Activity" />}
         {isSignedIn && <NavEntry to="/profile" icon={UserRound} label="Profile" />}
         <NavEntry to="/premium" icon={Crown} label="Premium" />
       </nav>

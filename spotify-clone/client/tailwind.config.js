@@ -4,19 +4,20 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Musify design tokens
+        // Design tokens resolve from CSS variables so the theme picker can
+        // recolour the whole app without a rebuild or a class rewrite.
         accent: {
-          DEFAULT: '#a78bfa', // violet-400 — brand accent
-          bright: '#c4b5fd',
-          deep: '#7c3aed',
+          DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
+          bright: 'rgb(var(--accent-bright) / <alpha-value>)',
+          deep: 'rgb(var(--accent-deep) / <alpha-value>)',
         },
         surface: {
-          950: '#0a0a0f', // page background
-          900: '#13131a', // panels
-          800: '#1c1c26', // raised cards
-          700: '#262633', // hover / overlays
+          950: 'rgb(var(--surface-950) / <alpha-value>)',
+          900: 'rgb(var(--surface-900) / <alpha-value>)',
+          800: 'rgb(var(--surface-800) / <alpha-value>)',
+          700: 'rgb(var(--surface-700) / <alpha-value>)',
         },
-        muted: '#a1a1b5',
+        muted: 'rgb(var(--muted) / <alpha-value>)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],

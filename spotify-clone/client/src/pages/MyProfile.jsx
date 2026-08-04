@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { Link } from 'react-router-dom';
-import { UserRound, Save, Copy, Globe, Lock, Loader2, Crown } from 'lucide-react';
-import { fetchProgress, fetchMe, updateProfile } from '../lib/api';
+import { UserRound, Save, Copy, Globe, Lock, Loader2, Crown, History, Play } from 'lucide-react';
+import { fetchProgress, fetchMe, updateProfile, fetchTimeCapsule } from '../lib/api';
 import { toast } from '../store/useToastStore';
+import { usePlayerStore } from '../store/usePlayerStore';
 import { Section } from '../components/ui';
 import LevelRing from '../components/LevelRing';
+import ThemePicker from '../components/ThemePicker';
 
 export default function MyProfile() {
   const { user } = useUser();
@@ -13,8 +15,11 @@ export default function MyProfile() {
   const [me, setMe] = useState(null);
   const [form, setForm] = useState({ username: '', bio: '', isPublic: true });
   const [saving, setSaving] = useState(false);
+  const [capsule, setCapsule] = useState(null);
+  const playQueue = usePlayerStore((s) => s.playQueue);
 
   useEffect(() => {
+    fetchTimeCapsule().then(setCapsule).catch(() => {});
     fetchProgress().then(setProgress).catch(() => {});
     fetchMe()
       .then((d) => {
@@ -117,6 +122,48 @@ export default function MyProfile() {
             </div>
           ))}
         </div>
+      </Section>
+
+      {/* Time capsule */}
+      {capsule && !capsule.empty && (
+        <Section title={<span className="flex items-center gap-2"><History size={18} className="text-accent" /> Time capsule</span>}>
+          <div className="space-y-4">
+            {capsule.sections.map((s) => (
+              <div key={s.id} className="bg-surface-800 border border-white/5 rounded-2xl p-4">
+                <div className="flex items-center justify-between mb-3 gap-3">
+                  <div>
+                    <div className="font-bold">{s.label}</div>
+                    <div className="text-muted text-xs">{s.date} · what you had on repeat</div>
+                  </div>
+                  <button
+                    onClick={() => playQueue(s.tracks, 0)}
+                    className="text-xs border border-white/15 hover:border-accent hover:text-accent rounded-full px-3 py-1.5 inline-flex items-center gap-1.5 shrink-0 transition-colors"
+                  >
+                    <Play size={12} /> Replay
+                  </button>
+                </div>
+                <div className="flex gap-3 overflow-x-auto no-scrollbar">
+                  {s.tracks.map((t) => (
+                    <div key={t.spotifyId} className="w-24 shrink-0">
+                      {t.albumArt ? (
+                        <img src={t.albumArt} alt="" className="w-24 h-24 rounded-lg object-cover" />
+                      ) : (
+                        <div className="w-24 h-24 rounded-lg bg-surface-700" />
+                      )}
+                      <div className="text-xs font-medium truncate mt-1.5">{t.title}</div>
+                      <div className="text-muted text-[10px] truncate">{t.artist}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {/* Appearance */}
+      <Section title="Appearance">
+        <ThemePicker />
       </Section>
 
       {/* Public profile settings */}

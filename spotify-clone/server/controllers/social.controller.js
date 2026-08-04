@@ -19,7 +19,7 @@ export const publicProfile = asyncHandler(async (req, res) => {
   if (user.isPublic === false) throw notFound('This profile is private');
 
   const since = new Date(Date.now() - 30 * 86400000);
-  const [topArtists, playlists, totals] = await Promise.all([
+  const [topArtists, playlists, totals, followers] = await Promise.all([
     Play.aggregate([
       { $match: { userId: user.clerkUserId, playedAt: { $gte: since }, artist: { $ne: '' } } },
       {
@@ -41,7 +41,23 @@ export const publicProfile = asyncHandler(async (req, res) => {
       { $match: { userId: user.clerkUserId } },
       { $group: { _id: null, plays: { $sum: 1 }, ms: { $sum: '$listenedMs' } } },
     ]),
+    User.countDocuments({ following: user.clerkUserId }),
   ]);
+
+  // If the viewer is signed in, tell them whether they already follow
+  const viewerId = typeof req.auth === 'function' ? req.auth()?.userId : req.auth?.userId;
+  let isFollowing = false;
+  let isSelf = false;
+  if (viewerId) {
+    isSelf = viewerId === user.clerkUserId;
+    if (!isSelf) {
+      const viewer = await User.findOne(
+        { clerkUserId: viewerId, following: user.clerkUserId },
+        { _id: 1 }
+      ).lean();
+      isFollowing = Boolean(viewer);
+    }
+  }
 
   const owned = new Set(user.badges || []);
   res.json({
@@ -55,6 +71,10 @@ export const publicProfile = asyncHandler(async (req, res) => {
     totalPlays: totals[0]?.plays || 0,
     minutesListened: Math.round((totals[0]?.ms || 0) / 60000),
     quizHighScore: user.quizHighScore || 0,
+    followers,
+    followingCount: (user.following || []).length,
+    isFollowing,
+    isSelf,
     badges: BADGES.filter((b) => owned.has(b.id)).map((b) => ({
       id: b.id,
       name: b.name,

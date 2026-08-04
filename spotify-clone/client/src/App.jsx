@@ -34,6 +34,7 @@ const Focus = lazy(() => import('./pages/Focus.jsx'));
 const MyProfile = lazy(() => import('./pages/MyProfile.jsx'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile.jsx'));
 const SharedPlaylist = lazy(() => import('./pages/SharedPlaylist.jsx'));
+const Feed = lazy(() => import('./pages/Feed.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
 
 const PageFallback = () => (
@@ -110,6 +111,14 @@ export default function App() {
                 element={
                   <Protected>
                     <MyProfile />
+                  </Protected>
+                }
+              />
+              <Route
+                path="/feed"
+                element={
+                  <Protected>
+                    <Feed />
                   </Protected>
                 }
               />
