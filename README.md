@@ -16,6 +16,9 @@ An **AI-powered music discovery platform** on the MERN stack: a 700+ track catal
 - **Guess the Song** — timed audio quiz with anti-cheat server-side scoring and a global leaderboard
 - **Levels, XP & 15 badges** — earn progress for listening, curating and playing; streaks included
 - **Public profiles & sharing** — a shareable `/u/username` page and one-click public playlist links
+- **Follow friends & activity feed** — see what people you follow are playing and sharing
+- **Time capsule** — replay what you had on repeat a week, month, six months and a year ago
+- **Theme customization** — six accent colours and three background moods, applied instantly
 - **Focus Mode** — Pomodoro timer with work/break cycles and six curated soundscapes
 - **Podcasts** — browse/search top shows and stream **full episodes** via public RSS feeds
 - **Listening stats** — minutes, streaks, top artists/genres, hour-of-day chart, 12-week calendar heatmap

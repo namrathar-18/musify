@@ -199,7 +199,12 @@ All `/api/playlists/*` and `/api/users/me/*` endpoints require `Authorization: B
 | POST   | `/api/billing/webhook` | — | Signature-verified Stripe webhook (optional) |
 | GET    | `/api/users/me/progress` | ✓ | Level, XP, badge catalog with earned state |
 | PUT    | `/api/users/me/profile` | ✓ | Username, bio, visibility, favourite genres |
-| GET    | `/api/profiles/:username` | — | Public profile (level, badges, top artists, public playlists) |
+| GET    | `/api/profiles/:username` | — | Public profile (level, badges, top artists, follower counts, public playlists) |
+| GET    | `/api/social/feed` | ✓ | Activity from people you follow (plays + shared playlists) |
+| GET    | `/api/social/following` | ✓ | Accounts you follow |
+| POST   | `/api/social/follow/:username` | ✓ | Follow a public account |
+| DELETE | `/api/social/follow/:username` | ✓ | Unfollow |
+| GET    | `/api/users/me/time-capsule` | ✓ | Your top tracks from a week/month/6 months/year ago |
 | GET    | `/api/shared/playlist/:id` | — | Read-only view of a shared playlist |
 | GET    | `/api/quiz/new` | ✓ | Deal a quiz round (answers never leave the server) |
 | POST   | `/api/quiz/submit` | ✓ | Grade a round, award XP, update high score |
